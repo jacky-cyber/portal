@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+        function getTableForm() {
+            return document.getElementById('tableForm');
+        }
+        function optDelete() {
+            if(Pn.checkedCount('ids')<=0) {
+                alert("<@s.m 'error.checkRecord'/>");
+                return;
+            }
+            if(!confirm("<@s.m 'global.confirm.delete'/>")) {
+                return;
+            }
+            var f = getTableForm();
+            f.action="o_delete.do";
+            f.submit();
+        }
+        $(document).ready(function(){
+            $("table tr").mousemove(function(){
+                $(this).css({"background-color":"#84ccc9"});
+            });
+            $("table tr").mouseout(function(){
+                $(this).css({"background-color":"white"});
+            });
+        });
+
+        function orderReportToXls() {
+
+            var st=$("input[name='startTime']").val();
+            var et=$("input[name='endTime']").val();
+            var code = $("input[name='code']").val();
+            var phone = $("input[name='phone']").val();
+            var commerceName = $("input[name='commerceName']").val();
+            var channelName = $("input[name='channelName']").val();
+            var productName = $("input[name='productName']").val();
+            var orderStatus = $("select[name='orderStatus']").val();
+            var shippingStatus = $("select[name='shippingStatus']").val();
+            var payMethod = $("select[name='payMethod']").val();
+            var paymentId = $("select[name='paymentId']").val();
+            var paymentStatus = $("select[name='paymentStatus']").val();
+            window.open("../newOrderReportToXls.do?startTime="+st+"&endTime="+et+"&commerceName="+commerceName+"&channelName="+channelName+"&productName="+productName+"&code="+code+"&phone="+phone+"&payMethod="+payMethod+"&shippingStatus="+shippingStatus+"&paymentId="+paymentId+"&paymentStatus="+paymentStatus+"&orderStatus="+orderStatus, '_self');
+
+        }
+
+    </script>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>: <@s.m "order.function.all"/> - <@s.m "global.list"/></div>
+        <form class="ropt">
+            <a href="javascript:void(0)" onclick="orderReportToXls();">导出查询结果</a>
+        </form>
+        <div class="clear"></div>
+    </div>
+    <div class="rhead">
+        <form id="searchModel" action="v_list.do">
+            <div style="padding-top:5px">
+                <input type="hidden" name="pageNo"/>
+                订单编号: <input type="text" name="code" value="${code!}" style="width:100px"/>
+                手机号码: <input type="text" name="phone" value="${phone!}" style="width:100px"/>
+                渠道名称: <input type="text" name="channelName" value="${channelName!}" style="width:100px"/>
+                商户名称: <input type="text" name="commerceName" value="${commerceName!}" style="width:100px"/>
+                商品名称: <input type="text" name="productName" value="${productName!}" style="width:100px"/>
+                下单日期:<input type="text" name="startTime" value="${startTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:100px"/>&nbsp;至&nbsp;<input type="text" name="endTime" value="${endTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:100px"/>
+
+                <select name="payMethod">
+                    <option value="">--支付方式--</option>
+                    <#list payMethodList as key>
+                        <option value="${key}">${key.displayName}
+                        </option>
+                    </#list>
+                </select>
+                <select name="paymentStatus">
+                    <option value="">--支付状态--</option>
+                    <#list payStatusList as key>
+                        <option value="${key}">${key.displayName}
+                        </option>
+                    </#list>
+                </select>
+
+                <select name="shippingStatus">
+                    <option value="">--配送状态--</option>
+                    <#list shipStatusList as key>
+                        <option value="${key}">${key.displayName}
+                        </option>
+                    </#list>
+                </select>
+
+                <select name="orderStatus">
+                    <option value="">--订单状态--</option>
+                    <#list orderStatusList as key>
+                        <option value="${key}">${key.displayName}
+                        </option>
+                    </#list>
+                </select>
+
+
+                <input type="submit"  value="<@s.m "global.query"/>" />
+            </div>
+        </form>
+
+        <div class="clear"></div>
+    </div>
+    <form id="tableForm" method="post">
+        <input type="hidden" name="pageNo" value="${pageNo!}"/>
+        <input type="hidden" name="code" value="${code!}"/>
+        <input type="hidden" name="paymentId" value="${paymentId!}"/>
+        <input type="hidden" name="shoppingId" value="${shoppingId!}"/>
+        <input type="hidden" name="paymentStatus" value="${paymentStatus!}"/>
+        <input type="hidden" name="shippingStatus" value="${shippingStatus!}"/>
+        <input type="hidden" name="startTime" value="${startTime!}"/>
+        <input type="hidden" name="endTime" value="${endTime!}"/>
+        <input type="hidden" name="orderStatus" value="${orderStatus!}"/>
+        <input type="hidden" name="payMethod" value="${payMethod!}"/>
+        <@p.table value=pagination;order,i,has_next><#rt/>
+        <@p.column title="<input type='checkbox' onclick='Pn.checkbox(\"ids\",this.checked)'/>" width="20">
+        <input type='checkbox' name='ids' value='${order.entity.id}'/><#t/>
+    </@p.column><#t/>
+    <@p.column code="订单编号"><a href="v_view.do?orderNumber=${order.orderNumber!}&pageNo=${pageNo!}">${order.orderNumber!}</a></@p.column><#t/>
+<@p.column code="手机号码">${order.entity.phone!}</@p.column><#t/>
+<@p.column code="渠道"><#if order.product??>${order.product.channelName!}</#if></@p.column><#t/>
+<@p.column code="商户">${order.commerceName!}</@p.column><#t/>
+<@p.column code="商品名称"><#if order.product??>${order.product.name!}</#if></@p.column><#t/>
+<@p.column code="order.total">￥${order.entity.totalAmount/100!}<!--<br/>(含运费:${order.freight!0})--></@p.column><#t/>
+<@p.column code="order.createTime" style="width:100px;">${order.entity.createTime?string("yyyy-MM-dd HH:mm:ss")}</@p.column><#t/>
+<@p.column code="order.payment">${order.entity.payMethod.displayName}</@p.column><#t/>
+<@p.column code="order.paymentStatus">${order.entity.paymentStatus.displayName}</@p.column><#t/>
+<@p.column code="order.shippingStatus">${order.entity.shipmentStatus.displayName}</@p.column><#t/>
+<@p.column code="order.orderType.status">
+<#if order.product??>
+    <#if order.product.productStamp ==1>本地商品</#if>
+    <#if order.product.productStamp ==2>虚拟商品</#if>
+    <#if order.product.productStamp ==3>商城商品</#if>
+    <#if order.product.productStamp ==4>金融商品</#if>
+</#if></@p.column><#t/>
+<@p.column code="order.status">${order.entity.status.displayName}</@p.column><#t/>
+<@p.column code="global.operate" align="left">
+<!--<a href="v_edit.do?id=${order.id}&pageNo=${pageNo!}"><@s.m "global.edit"/></a> | <#rt/>-->
+<a href="o_delete.do?ids=${order.entity.id}&pageNo=${pageNo!}" onclick="if(!confirm('<@s.m "global.confirm.delete"/>')) {return false;}"><@s.m "global.delete"/></a><#t/>
+</@p.column><#t/>
+</@p.table>
+<div><input type="button" value="<@s.m "global.delete"/>" onclick="optDelete();"/></div>
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+<script type="text/javascript">
+    $("select[name='shippingStatus']").find("option[value='${shippingStatus!}']").attr("selected",true);
+    $("select[name='payMethod']").find("option[value='${payMethod!}']").attr("selected",true);
+    $("select[name='paymentStatus']").find("option[value='${paymentStatus!}']").attr("selected",true);
+    $("select[name='orderStatus']").find("option[value='${orderStatus!}']").attr("selected",true);
+
+    function _gotoPage(pageNo) {
+            var tableForm = document.getElementById('searchModel');
+            $("input[name=pageNo]").val(pageNo);
+            tableForm.action="v_list.do";
+            tableForm.submit();
+    }
+</script>
+</body>
+</html>

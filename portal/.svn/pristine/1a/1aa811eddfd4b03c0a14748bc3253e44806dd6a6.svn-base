@@ -1,0 +1,27 @@
+<div class="footer_bg">
+    <div class="center footer_back">
+    <!-- 帮助中心栏目 -->
+    [@shop_Channel  count='6']
+       [#list tag_list as c]
+        <div class="helpCol">
+            <ul>
+              <li><a href="${c.url!}" class="track" target="_blank"><h3>${c.name!}</h3></a><br/></li>
+              [@shop_ArticleList channelId=c.id count='20']
+                [#list tag_list as a]
+                 <li><a href="${a.url!}" class="track" target="_blank">${a.title!}</a></li>
+                 [/#list]
+              [/@shop_ArticleList]
+            </ul>
+        </div>
+        [/#list]
+     [/@shop_Channel]
+       <div class="clear"></div>
+    </div>
+    <div class="foot">
+        <div class="foot-txt">
+             <img src="${root}/img/JSPGO_227.gif" /><img src="${root}/img/JSPGO_229.gif" /><img src="${root}/img/JSPGO_231.gif" />
+        </div>
+    </div>
+    <p class="coyp_right" style="padding-top:30px;">Powered by  Copyright © 2014-2024深圳市永联共建信息技术有限公司, All Rights Reserved </p>
+    <p class="coyp_right"></p><p></p>      
+</div>

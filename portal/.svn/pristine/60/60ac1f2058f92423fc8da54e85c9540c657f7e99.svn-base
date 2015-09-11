@@ -1,0 +1,101 @@
+@charset "utf-8";
+
+/*
+Description：layout for mobile client
+Author: Li Wenbin
+***********************/
+
+body {
+	font-size: 14px;
+	font-family: "微软雅黑";
+	padding: 0px;
+	margin: 0 auto;
+	color: #666666;
+	background: url(../images/bj_new.jpg) repeat;
+}
+header{ height: 40px; padding:10px 2%; color: #eeeeee; }
+header ul{ list-style: none ; margin: 0px; padding: 0px;}
+header ul li{ display: list-item; margin: 0px; padding: 0px;  }
+a {
+	text-decoration: none;
+	color: #ffd401;
+	outline: none;
+}
+
+.h_logo{
+	 width: 150px; padding-top: 7px;font-family:华文新魏;font-size:30px;font-weight:bold;font-style:normal;
+}
+
+.h_city{
+	width: 75px; padding-top: 15px;color: white; font-size: 13px;
+}
+.paint {
+	width: 55px;
+	padding-right: 5px;
+	text-align: right;
+}
+
+nav{ padding: 0 2%; background: url(../images/nav_bj_new.png) repeat-x; background-size: auto 42px; }
+
+.tab_nav{ height: 42px;color: #000000; line-height: 28px; text-align: center; }
+.tab_nav ul{list-style: none; display: block;  margin: 0px; padding: 0px;
+}
+.tab_nav ul li{display: list-item; margin: 0px; padding-top: 10px; }
+.tab_nav li a {
+	width: 90px;
+	text-align: center;
+	display: block;
+	height: 31px;
+	color: #000;
+}
+
+.tab_nav li a.oaClick {
+	background: url(../images/nav_bj.png);
+	background-size: 90px 31px;
+	color: #fff;
+	text-shadow: 0px 0px 0px #fff;
+}
+
+.tab_nav_one {
+	padding: 0px;
+	line-height: 42px;
+	font-family: 微软雅黑;
+}
+
+.tab_nav_one .Hide {
+	display: block;
+	text-align: center;
+	font-family:微软雅黑;font-size:16px;font-weight:bold;font-style:normal;
+	width: 80%;
+}
+
+.tab_nav_one img {
+	margin: 13px 0px 0px 0px;
+}
+
+article{
+	margin: 0px; padding: 0px;
+}
+
+footer{
+	margin-top:-2px; margin: 0px; padding: 0px;
+}
+.foot {
+	border-top: 3px solid #818181;
+	height: 80px;
+	margin-top: 15px;
+	line-height: 22px;
+	padding-top: 5px;
+	text-align: center;
+	background-color: rgba(83,83,83, 0.4);
+}
+.foot p {
+	margin:2px; padding:0px;
+	color: #818181;
+	filter: alpha(opacity=100);
+	-moz-opacity: 1;
+	opacity: 1;
+}
+.foot .c1 {
+	color: #818181; margin-left: 20px;
+}

@@ -1,0 +1,29 @@
+package com.ifunpay.portal.enums;
+
+/**
+ * Created by Yu on 2014/12/4.
+ */
+public enum PaymentStatusEnum {
+    NotPay("未支付"),
+    Paying("支付中"),
+    PayFailed("支付失败"),
+    PaySucceeded("支付成功"),
+    Refunding("退款中"),
+    RefundSucceeded("退款成功"),
+    RefundFailed("退款失败"),
+    Unknown("未知"), ;
+    ;
+
+    private String displayName;
+    private PaymentStatusEnum(String displayName){
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+}

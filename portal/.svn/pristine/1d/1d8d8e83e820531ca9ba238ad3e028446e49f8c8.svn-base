@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+        $(function() {
+            $("#bankPayInfoForm").validate();
+        });
+    </script>
+    <style type="text/css">
+        .params{padding-top:5px;}
+    </style>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>:  <@s.m "bankPayInfo.function"/> - <@s.m "global.edit"/></div>
+        <form class="ropt">
+            <input type="submit" value="<@s.m "global.backToList"/>" onclick="this.form.action='v_list.do';"/>
+        </form>
+        <div class="clear"></div>
+    </div>
+    <#assign errorBankExist><@s.m "error.bankNameExist"/></#assign>
+    <@p.form id="bankPayInfoForm" name="bankPayInfoForm" action="o_update_save.do">
+    <input type="hidden" name="id" value ="${bankPayInfo.id}" />
+    <@p.text label="名称" name="name" value="${bankPayInfo.name!}" required="true" class="required" vld="{required:true,rangelength:[3,100],remote:'v_bank_pay_name.do?id=${bankPayInfo.id}',messages:{remote:'${errorBankExist}'}}"/>
+    <@p.text label="商户ID" name="merchantId" value="${bankPayInfo.merchantId!}" required="true" class="required" />
+    <@p.text label="网上支付柜台" name="webCounter" value="${bankPayInfo.webCounter!}" required="true" class="required" />
+    <@p.text label="手机支付柜台" name="mobileCounter" value="${bankPayInfo.mobileCounter!}" required="true" class="required" />
+    <@p.text label="分行号" name="branch" value="${bankPayInfo.branch!}" required="true" class="required" />
+    <@p.select  label="银行APP"  name="app" value="${bankPayInfo.app!}" list=apps required="true" />
+    <@p.radio  label="帐号类型"  name="type" list={"0":"bankPayInfo.type.0", "1":"bankPayInfo.type.1"} value="${bankPayInfo.type!}" required="true" />
+    <@p.textarea label="公钥" name="publicKey" value="${bankPayInfo.publicKey!}" style="width:400px;height:100px"/>
+    <@p.textarea label="备注" name="remark" value="${bankPayInfo.remark!}" style="width:400px;height:50px"/>
+    <@p.td>
+    <@p.submit code="global.submit"/> &nbsp; <@p.reset code="global.reset"/>
+</@p.td>
+</@p.form>
+</div>
+</body>
+</html>

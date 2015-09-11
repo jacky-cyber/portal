@@ -1,0 +1,38 @@
+.cur {
+    cursor: pointer;
+}
+.btn_hhs {
+    font-size: 17px;
+    border-bottom: 1px solid #000;
+    border: 0px;
+    height: 38px;
+    font-family: "微软雅黑";
+    color: #64400e;
+    text-shadow: 1px 1px 1px #fff;
+    font-weight: bold;
+    outline: none;
+    display: block;
+    width: 100%;
+    line-height: 38px;
+    text-align: center;
+    border-radius: 6px;
+}
+.div_a {
+    background-color: rgba(fff, fff, fff, 1);
+    color: #666;
+    /* text-shadow: 1px 1px 0px #000; */
+    width: 90%;
+    padding: 15px 2%;
+    margin: 10px 3% 0px;
+    border: 1px solid #e1e0e0;
+    /* box-shadow: 0px 1px 0px #e1e0e0 Inset; */
+    background-color: #FFF;
+    border-radius: 3px;
+}
+.order_inf {
+    font-family: "微软雅黑";
+    margin: 15px;
+    padding: 20px 10px;
+    color: brown;
+    font-size: 15px;
+}

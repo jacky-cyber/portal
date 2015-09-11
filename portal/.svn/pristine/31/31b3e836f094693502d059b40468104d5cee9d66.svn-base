@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link href="/favicon.ico" type="image/x-icon" rel="shortcut icon" />
+    <#include "/jspgou_sys/head.html"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>金融云平台</title>
+</head>
+<style>
+    .body{
+        width:0 auto;
+        height:0 auto;
+        background-image:url(${base}/res/jspgou/img/login/newlogin/bg.jpg);
+    }
+    .center{margin:0 auto;
+        width:530px;
+        height:404px;
+        background-image:url(${base}/res/jspgou/img/login/newlogin/bg1.png);
+        margin-top:13%;
+    }
+    .logo{width:183px;
+        height:44px;
+        margin-left:20px;
+    }
+    .float{float:left;}
+    .unmenr{margin-left:60px;
+        margin-top:-80px;
+    }
+    .demo {text-shadow: 0 0 1px #666666;
+        font-family:'微软雅黑', Arial; size:16px; color:#FFF; margin-left:288px; margin-top:21px;}
+    .kong{height:110px; width:183px; margin-left:25px;}
+    .input1Div{margin-top:-80px; margin-left:-1px;}
+    .input2Div{margin-top:-25px; margin-left:-1px;}
+    .input3Div{margin-left:265px; margin-top:8px;}
+    .yzmWz{margin-top:8px; margin-left:3px;}
+    .kbq{font-size:12px; margin-left:11px; margin-top:37px;}
+    .input4Div{margin-left:265px; margin-top:15px; width:106px; height:40px;}
+    .input5Div{margin-top:21px; margin-left:120px;}
+</style>
+<script type="text/javascript">
+    if(top!=this) {
+        top.location=this.location;
+    }
+    $(function() {
+        $("#username").focus();
+        $("#jvForm").validate();
+    });
+</script>
+<body class="body">
+<div>
+    <form id="jvForm" action="index.do" method="post">
+        <div class="center">
+            <div class="kong"></div>
+            <div class="logo float"><img src="${base}/res/jspgou/img/login/newlogin/logo.png" width="220" height="60" /></div>
+            <div class="float unmenr"><img src="${base}/res/jspgou/img/login/newlogin/ico.png" width="41" height="95" /></div>
+            <div class="float input1Div"><input type="text" id="username"name="username" maxlength="20" size="38" style="width:180px; height:36px; border:solid 1px #FFFFFF;" class="text"/>
+            </div>
+            <div class="float input2Div"><input type="password" id="password" name="password" maxlength="20" size="38" style="width:180px; height:36px; border:solid 1px #FFFFFF;" class="text"/>
+            </div>
+            <div style="margin-top: 5px; margin-left: 217px;" class="float"><span id="errMessage" style="color: #ff8484;">${errorMsg!}</span></div>
+            <div class="demo">
+                <div style="height:1px; width: 220px;"></div>
+            </div>
+            <div class="float input3Div"><input type="text"  name="checkcode" maxlength="6" size="38" value="输入验证码" onFocus="this.value=''" style="width:75px; height:25px; border:solid 1px #FFFFFF;" class="text"/></div>
+            <!--<div class="float yzmWz"><img src="${base}/res/jspgou/img/login/newlogin/yzm.png" width="77" height="29" /></div>-->
+            <div class="float yzmWz"><img  id ="checkcode" src="${base}/checkcode.svl" width="77" height="29" onclick="$('#checkcode').attr('src','${base}/checkcode.svl?d'+new Date()*1);"/></div>
+            <div class="kbq"><a href="javascript:void(0);" class="xieyi" onclick="$('#checkcode').attr('src','${base}/checkcode.svl?d'+new Date()*1);return false">&nbsp看不清</a></div>
+            <!--<div class="float input4Div"><img src="${base}/res/jspgou/img/login/newlogin/2.png" width="104" height="42" /></div>-->
+            <!--<div class="input5Div"><img src="${base}/res/jspgou/img/login/newlogin/1.png" width="98" height="42" /></div>-->
+
+            <div class="input4Div float">
+                <input type="submit" width="75px" style="color:#FFF; width:108px; height:40px; border:none; background-image:url(${base}/res/jspgou/img/login/newlogin/1.png)" value="提交"/>
+            </div>
+            <div class="input5Div">
+                <input type="reset" style="color:#FFF; width:108px; height:40px; border:none; margin-left: 7px; background-image:url(${base}/res/jspgou/img/login/newlogin/1.png)" value="重置"/>
+            </div>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

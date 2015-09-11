@@ -1,0 +1,111 @@
+package com.jspgou.cms.dao;
+
+import com.jspgou.cms.entity.*;
+import com.jspgou.common.hibernate3.Updater;
+import com.jspgou.common.page.Pagination;
+
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+
+/**
+* This class should preserve.
+* @preserve
+*/
+public interface OrderDao {
+	
+	public Pagination getPageForMember(Long memberId, int pageNo, int pageSize);
+
+	public Pagination getPageForMember1(Long memberId, int pageNo, int pageSize);
+	
+	public Pagination getPageForOrderReturn(Long memberId, int pageNo, int pageSize);
+	
+	public Pagination getPageForMember2(Long memberId, int pageNo, int pageSize);
+	
+	public Pagination getPageForMember3(Long memberId, int pageNo, int pageSize) ;
+	
+	public Pagination getPage(String channelName,String commerceName,String phone,String channelId,String commerceId,Long webId,Long memberId,String productName, String userName,Long paymentId, Long shippingId,
+			Date startTime,Date endTime,Double startOrderTotal,Double endOrderTotal,Integer status,Integer paymentStatus,Integer shippingStatus,String code,int pageNo, int pageSize);
+
+    public Pagination getPageForNewOrder(Long channelId,Long commerceId,String code,String phone,String channelName,String commerceName,String productName,String startTime,String endTime,String payMethod,String paymentStatus,String shippingStatus,String status,int pageNo,int pageSize);
+
+    public java.util.List<Order> getAllOrderToExcel(String channelName,String commerceName,String productName,String phone,String channelId,String commerceId, Long paymentId,  Date startTime,Date endTime, Integer status,Integer paymentStatus,Integer shippingStatus,String code) ;
+
+
+        /**
+         * get Pagination for voucher
+         * @param pageNo
+         * @param pageSize
+         * @return
+         */
+    public Pagination getPageForVoucher(Long commerceId,String recepPhone,String productName,String commerceName,String voucherCode,String status,String code,int pageNo, int pageSize);
+
+    public Pagination getPage(Long webId,Long memberId,String productName, String userName,Long paymentId, Long shippingId,
+			Date startTime,Date endTime,Double startOrderTotal,Double endOrderTotal,Integer status,Long code,int pageNo, int pageSize);
+	
+	public Order findById(Long id);
+
+	public Order save(Order bean);
+
+	public Order updateByUpdater(Updater<Order> updater);
+
+	public Order deleteById(Long id);
+
+    public void updateOrderEntity(Order order);
+
+    public Order updateOrderDelStatus(Long id);
+	
+	public List<Object> getTotlaOrder(HttpServletRequest request);
+	
+	public List<Order> getlist(Date endDate);
+	
+	public BigDecimal getMemberMoneyByYear(Long memberId);
+	
+	public Integer[] getOrderByMember(Long memberId);
+	
+	public Pagination getOrderByReturn(Long memberId,Integer pageNo,Integer pageSize);
+
+    public Pagination getChannelReport(String name, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long commerceId);
+
+    public Pagination getCommerceReport(String name, String channelName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long commerceId);
+
+    public List<Settlement> getChannelReport(String name, Date startTime, Date endTime, Long channelId, Long commerceId);
+    public List<Settlement> getCommerceReport(String name, String channelName, Date startTime, Date endTime, Long channelId, Long commerceId);
+
+    public Pagination getProductReport(String productName, String commerceName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long commerceId);
+    public List<ProductReport> getProductReport(String productName, String commerceName, Date startTime, Date endTime, Long channelId, Long commerceId);
+
+    public Pagination getProductReportByRMB(String productName, String commerceName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long commerceId);
+    public List<ProductReportEntity> getProductReportByRMB(String productName, String commerceName, Date startTime, Date endTime, Long channelId, Long commerceId);
+
+    public Pagination getVendorReport(String name, Date startTime, Date endTime, Long channelId, Long commerceId, int pageNo, int pageSize);
+    public List<VendorReport> getVendorReport(String name, Date startTime, Date endTime, Long channelId, Long commerceId);
+
+    public Pagination getVendorReportByRMB(String name, Date startTime, Date endTime, int pageNo, int pageSize);
+    public List<VendorReportEntity> getVendorReportByRMB(String name, Date startTime, Date endTime);
+
+    public Pagination getCommerceReportByPayMethodAmount(String name, Date startTime, Date endTime, int pageNo, int pageSize);
+    public List<ReportByAmountEntity> getCommerceReportByPayMethodAmount(String name, Date startTime, Date endTime);
+
+    public Pagination getCommerceReportByPayMethod(String name, Date startTime, Date endTime, int pageNo, int pageSize);
+    public List<ReportEntity> getCommerceReportByPayMethod(String name, Date startTime, Date endTime);
+
+    public Order findByCode(String code);
+
+    public Order findByTerminalNoAndSerialNo(String terminalNo,String serialNo);
+
+    public  List<Order> getlistByCommerceAndmember(String commerceId, Long memberId);
+
+    public List<Order> getOrderListByIdAndPhone(String orderId,String phone,int start,int size);
+
+    public boolean isConsumeForVoucher(String code);
+
+    public Integer getOrderCount(Long productId, Long mobile,String cookieId ,Date newStart);
+
+    Pagination getCommerceReportDetails(Long commerceId, String commerceName, String channelName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId);
+
+    List<ProductReportDetail> getCommerceReportDetails(String commerceName, String channelName, Date startTime, Date endTime, Long channelId, Long commerceId);
+
+    Pagination getAccountReport(String account, Date startTime, Date endTime, int pageNo, int pageSize);
+}

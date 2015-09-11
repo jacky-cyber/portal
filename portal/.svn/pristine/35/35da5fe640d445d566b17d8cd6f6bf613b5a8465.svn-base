@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="com.jspgou.cms.entity">
+    <class name="Favorable" table="jc_shop_favorable">
+        <meta attribute="sync-DAO">false</meta>
+        <cache usage="read-write"/>
+        <id name="id" type="java.lang.Long" column="id"><generator class="native"/></id>
+        <property name="name" column="name" type="string" not-null="false" length="100"/>
+
+        <property name="area" column="area" type="java.lang.Integer" not-null="false" length="100"/>
+        <property name="amountType" column="amountType" type="java.lang.Integer" not-null="false" length="100"/>
+        <property name="manner" column="manner" type="java.lang.Integer" not-null="false" length="100"/>
+        <property name="orderAmount" column="orderAmount" type="java.lang.Integer" not-null="false" length="100"/>
+        <property name="productAmount" column="productAmount" type="java.lang.Integer" not-null="false" length="100"/>
+        <property name="automatic" column="automatic" type="java.lang.Integer" not-null="false" length="100"/>
+        <property name="regainPrice" column="regainPrice" type="java.lang.Integer" not-null="false" length="100"/>
+
+
+        <property name="favorableType" column="favorableType" type="java.lang.Integer" not-null="false" length="2"/>
+        <property name="beforeN" column="beforeN" type="java.lang.Integer" not-null="false" length="100"/>
+        <property name="weeks" column="weeks" type="java.lang.String" not-null="false" length="100"/>
+        <property name="months" column="months" type="java.lang.String" not-null="false" length="100"/>
+        <property name="startTime" column="startTime" type="java.util.Date" not-null="false" length="100"/>
+        <property name="endTime" column="endTime" type="java.util.Date" not-null="false" length="100"/>
+
+        <property name="channelId" column="channelId" type="java.lang.String" not-null="false" length="100"/>
+        <property name="channelName" column="channelName" type="java.lang.String" not-null="false" length="100"/>
+        <property name="remark" column="remark" type="java.lang.String" not-null="false" length="100"/>
+        <property name="dele" column="dele" type="java.lang.Integer" not-null="false" length="1"/>
+
+    </class>
+</hibernate-mapping>

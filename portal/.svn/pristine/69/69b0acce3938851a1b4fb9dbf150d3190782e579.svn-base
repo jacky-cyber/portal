@@ -1,0 +1,26 @@
+package com.ifunpay.portal.enums;
+
+/**
+ * Created by CongLong Xie on 2015/7/23.
+ */
+public enum PayMethodEnum {
+        AShotToPay("一拍支付"),
+        FlashPay("闪付"),
+        InsertCard("插卡支付"),
+        QrCode("二维码支付"),
+
+    ;
+    private String displayName;
+
+    PayMethodEnum(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+}

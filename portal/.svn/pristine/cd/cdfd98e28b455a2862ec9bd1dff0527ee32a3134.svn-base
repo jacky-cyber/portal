@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>jspgou-left</title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+        $(function(){
+            JCore.lmenu('lmenu');
+        });
+    </script>
+</head>
+<body class="lbody">
+<ul id="lmenu">
+    <li><a href="member_right.do" target="rightFrame"><@s.m "global.admin.index"/></a></li>
+    <@authorize url="channelReport/v_list.do">
+        <li><a href="../channelReport/v_list.do" target="rightFrame">渠道统计报表</a></li>
+    </@authorize>
+    <li><a href="../commerceReport/v_list.do" target="rightFrame">商户统计报表</a></li>
+    <li><a href="../productReport/v_list.do" target="rightFrame">商品统计报表</a></li>
+    <li><a href="../vendorReport/v_list.do" target="rightFrame">售货机统计报表</a></li>
+    <li><a href="../accountReport/v_list.do" target="rightFrame">交易查询</a></li>
+</ul>
+</body>
+</html>

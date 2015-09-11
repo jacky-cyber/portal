@@ -1,0 +1,1020 @@
+package com.jspgou.cms.action.admin.main;
+
+import com.ifunpay.portal.ProjectXml;
+import com.ifunpay.portal.entity.Commerce;
+import com.ifunpay.portal.service.commerce.ChannelService;
+import com.ifunpay.portal.service.commerce.CommerceService;
+import com.ifunpay.portal.service.log.OperationLogService;
+import com.ifunpay.util.cache.BooleanCacheService;
+import com.ifunpay.util.enums.InteractType;
+import com.jspgou.cms.Constants;
+import com.jspgou.cms.entity.*;
+import com.jspgou.cms.lucene.LuceneProductSvc;
+import com.jspgou.cms.manager.*;
+import com.jspgou.cms.web.SiteUtils;
+import com.jspgou.common.image.ImageUtils;
+import com.jspgou.common.page.Pagination;
+import com.jspgou.common.web.CookieUtils;
+import com.jspgou.common.web.RequestUtils;
+import com.jspgou.common.web.ResponseUtils;
+import com.jspgou.common.web.session.SessionProvider;
+import com.jspgou.common.web.springmvc.MessageResolver;
+import com.jspgou.core.entity.Admin;
+import com.jspgou.core.entity.Website;
+import com.jspgou.core.manager.AdminMng;
+import com.jspgou.core.web.WebErrors;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.store.LockObtainFailedException;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.context.ServletContextAware;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.*;
+
+import static com.jspgou.common.page.SimplePage.cpn;
+import static com.jspgou.common.web.Constants.LIST_SPLIT;
+import static com.jspgou.core.web.Constants.CHANNELID;
+import static com.jspgou.core.web.Constants.COMMERCEID;
+
+
+/**
+ * This class should preserve.
+ * @preserve
+ */
+@Controller
+public class ProductAct implements ServletContextAware {
+	private static final Logger log = LoggerFactory.getLogger(ProductAct.class);
+	public static ArrayList<HashMap<String,String>> commerceForProduct=new ArrayList<HashMap<String,String>>();
+
+    @Resource
+    BooleanCacheService booleanCacheService;
+
+	@RequestMapping("/product/v_list.do")
+	public String list(Long ctgId,Boolean isOnSale,Boolean isRecommend,
+					   Boolean isSpecial,Boolean isHotsale,Boolean isNewProduct,
+					   Long typeId,Double startSalePrice,Double endSalePrice,
+					   Integer startStock,Integer endStock,Integer pageNo,
+					   HttpServletRequest request, ModelMap model,String channelName,String commerceName,Date startTime ,Date endTime) {
+		String productName = RequestUtils.getQueryParam(request, "productName");
+        String id = RequestUtils.getQueryParam(request, "productId");
+        Integer productStamp = null;
+        String stamp = RequestUtils.getQueryParam(request,"productStamp");
+        if(!"".equals(stamp)&&null!=stamp){
+            productStamp = Integer.valueOf(stamp);
+        }
+        Long productId = null;
+        if(!"".equals(id)&&null!=id){
+            productId = Long.valueOf(id);
+        }
+		productName = StringUtils.trim(productName);
+		String channelId = (String)session.getAttribute(request,CHANNELID);
+		String commerceId = (String)session.getAttribute(request,COMMERCEID);
+		String brandName = RequestUtils.getQueryParam(request, "brandName");
+		brandName = StringUtils.trim(brandName);
+		Website web = SiteUtils.getWeb(request);
+		if (ctgId != null) {
+			model.addAttribute("category", categoryMng.findById(ctgId));
+		}
+
+		Pagination pagination = manager.getPage(SiteUtils.getWebId(request),
+				ctgId, productName,brandName,isOnSale, isRecommend, isSpecial,isHotsale,isNewProduct,typeId,
+				startSalePrice,endSalePrice,startStock,endStock,
+				cpn(pageNo), CookieUtils.getPageSize(request),channelId,channelName,commerceId,commerceName,productStamp,productId,startTime,endTime);
+		List<ProductType> typeList = productTypeMng.getList(web.getId());
+		model.addAttribute("typeList", typeList);
+		model.addAttribute("productName", productName);
+		model.addAttribute("brandName",brandName);
+		model.addAttribute("isOnSale", isOnSale);
+		model.addAttribute("isRecommend", isRecommend);
+		model.addAttribute("isSpecial",isSpecial);
+		model.addAttribute("isHotsale", isHotsale);
+		model.addAttribute("isNewProduct", isNewProduct);
+		model.addAttribute("typeId",typeId);
+		model.addAttribute("startSalePrice", startSalePrice);
+		model.addAttribute("endSalePrice", endSalePrice);
+		model.addAttribute("startStock",startStock);
+		model.addAttribute("endStock", endStock);
+		model.addAttribute("pagination",pagination);
+		model.addAttribute("ctgId", ctgId);
+		model.addAttribute("channelName",channelName);
+		model.addAttribute("commerceName",commerceName);
+
+        model.addAttribute("stampList",productStamps());
+        model.addAttribute("productStamp",String.valueOf(productStamp));
+        if(null!=productId){
+            model.addAttribute("productId",productId);
+        }
+        model.addAttribute("startTime",startTime);
+        model.addAttribute("endTime",endTime);
+
+		return "product/list";
+	}
+
+	@RequestMapping("/product/v_left.do")
+	public String left(HttpServletRequest request, ModelMap model) {
+		List<Category> list = categoryMng.getTopList(SiteUtils
+				.getWebId(request));
+		// 如果没有商品类别，则不传递数据到视图层，由视图层给出相应提示。
+		if (list.size() > 0) {
+			Category treeRoot = new Category();
+			treeRoot.setName(MessageResolver.getMessage(request,
+					"product.allCategory"));
+			treeRoot.setChild(new LinkedHashSet<Category>(list));
+			model.addAttribute("treeRoot", treeRoot);
+		}
+		return "product/left";
+	}
+
+	@SuppressWarnings("unchecked")
+	@RequestMapping("/product/v_add.do")
+	public String add(Long ctgId, HttpServletRequest request, ModelMap model) {
+		Category category= categoryMng.findById(ctgId);
+		// 模型项列表
+		List<ProductTypeProperty> itemList = productTypePropertyMng.getList(category.getType().getId(), false);
+		List<StandardType> standardTypeList =standardTypeMng.getList(category.getId());
+		model.addAttribute("ctgId", ctgId);
+		model.addAttribute("category", category);
+		model.addAttribute("categoryList", categoryMng.getListForProduct(SiteUtils.getWebId(request), ctgId));
+		model.addAttribute("tagList", productTagMng.getList(SiteUtils.getWebId(request)));
+		model.addAttribute("standardTypeList", standardTypeList);
+		model.addAttribute("itemList", itemList);
+        String channelId = (String)session.getAttribute(request,CHANNELID);
+        String commerceId = (String)session.getAttribute(request,COMMERCEID);
+        List<Commerce> commerceList = commerceService.getAllCommerces();
+		if(null!=commerceId){
+			for (Commerce commerceA:commerceList){
+				if(commerceId.equals(commerceA.getId())){
+					List<Commerce> comList = new ArrayList<>();
+					comList.add(commerceA);
+					commerceList = comList;
+				}
+			}
+
+		}
+		if(null!=channelId && null==commerceId){
+			for (Commerce commerceA:commerceList){
+				if(channelId.equals(commerceA.getChanIdRela().getId().toString())){
+					List<Commerce> comList = new ArrayList<>();
+					comList.add(commerceA);
+					commerceList = comList;
+				}
+			}
+		}
+
+
+        Commerce commerce1= new Commerce();
+        commerce1.setId((long)0);
+        commerce1.setName("无");
+        commerceList.add(0,commerce1);
+//        List<Channel> channelList = channelService.getAllChannel();
+
+
+//        model.addAttribute("channelList", channelList);
+        model.addAttribute("commerceList", commerceList);
+        List<Map<String,Object>> productStampList = productStamps();
+        productStampList.remove(0);
+		model.addAttribute("productStampList",productStampList);
+		model.addAttribute("sendMassageList",sendMassage());
+		model.addAttribute("loginList",loginOrNot());
+		model.addAttribute("buyStepList",buyStep());
+		model.addAttribute("lackRemindList",lackRemind());
+		List<Exended> exendeds = exendedMng.getList(category.getType().getId());
+		Map map= new HashMap();
+		Map map1= new HashMap();
+		int num = exendeds.size();
+		for(int i=0;i<num;i++){
+			map.put(exendeds.get(i).getId().toString(), exendeds.get(i).getItems());
+			map1.put(exendeds.get(i).getId().toString(), exendeds.get(i));
+		}
+		model.addAttribute("map", map);
+		model.addAttribute("map1", map1);
+
+//        List<Favorable> favorableList = favorableMng.getFavorableByChannel(channelId);
+//        Favorable favorable = new Favorable();
+//        favorable.setId((long)0);
+//        favorable.setName("无");
+//        favorableList.add(0,favorable);
+//        model.addAttribute("favorableList",favorableList);
+
+		return "product/add";
+	}
+
+	@SuppressWarnings("unchecked")
+	@RequestMapping("/product/v_edit.do")
+	public String edit(Long id, Long ctgId, HttpServletRequest request,
+					   ModelMap model) {
+		long adminId = (long)session.getAttribute(request,"_admin_id_key");
+		log.info("adminId = " + adminId);
+		Admin admin = adminMng.findById(adminId);
+		operationLogService.productEdit(admin.getUsername(), id + "", id + "");
+
+		WebErrors errors = validateEdit(id, request);
+		if (errors.hasErrors()) {
+			return errors.showErrorPage(model);
+		}
+		Product product = manager.findById(id);
+		List<ProductStandard> psList = productStandardMng.findByProductId(id);
+		String productKeywords = StringUtils.join(product.getKeywords(),LIST_SPLIT);// 模型项列表
+		Category category= product.getCategory();
+		List<StandardType> standardTypeList = standardTypeMng.getList(category.getId());
+		List<ProductTypeProperty> itemList = productTypePropertyMng.getList(category.getType().getId(), false);
+		List<ProductExended> pelist=product.getExendeds();
+		List<Exended> exendeds = exendedMng.getList(category.getType().getId());
+		Map map= new HashMap();
+		Map map1= new HashMap();
+		int num = exendeds.size();
+		for(int i=0;i<num;i++){
+			map.put(exendeds.get(i).getId().toString(), exendeds.get(i).getItems());
+			map1.put(exendeds.get(i).getId().toString(), exendeds.get(i));
+		}
+		Map map2=new HashMap();
+		for(int i=0;i<pelist.size();i++){
+			map2.put(pelist.get(i).getName(), pelist.get(i).getValue());
+		}
+		model.addAttribute("map2", map2);
+		model.addAttribute("map", map);
+		model.addAttribute("map1", map1);
+		model.addAttribute("productKeywords", productKeywords);
+		model.addAttribute("tagList", productTagMng.getList(SiteUtils.getWebId(request)));
+		model.addAttribute("categoryList", categoryMng.getList(SiteUtils.getWebId(request)));
+		model.addAttribute("standardTypeList",standardTypeList);
+		model.addAttribute("category", category);
+		model.addAttribute("product", product);
+		model.addAttribute("ctgId", ctgId);
+		model.addAttribute("isLimit", product.getProductExt().getIslimitTime());
+		model.addAttribute("itemList", itemList);
+		model.addAttribute("psList",psList);
+		model.addAttribute("lackRemindList",lackRemind());
+
+
+
+        ArrayList<HashMap<String,Object>> commerceList = new ArrayList<>();
+        HashMap<String , Object> commerceMap = new HashMap<>();
+
+        Commerce commerce = commerceService.getCommerceById(Long.valueOf(product.getCommerceId()));
+        if(null!=commerce){
+            commerceMap.put("id",commerce.getId());
+            commerceMap.put("name",commerce.getName());
+            commerceList.add(commerceMap);
+        }
+//        List<ProductFavorable> productFavorable = productFavorableMng.getListByProduct(product.getId(),null);
+//        if(productFavorable.size()>0){
+//            model.addAttribute("favorable",productFavorable.get(0).getFavorableId());
+//        }else {
+//            model.addAttribute("favorable","");
+//        }
+        model.addAttribute("commerceList", commerceList);
+        List<Map<String,Object>> productStampList = productStamps();
+        productStampList.remove(0);
+		model.addAttribute("productStampList",productStampList);
+		model.addAttribute("sendMassageList",sendMassage());
+		model.addAttribute("loginList",loginOrNot());
+		model.addAttribute("buyStepList",buyStep());
+		model.addAttribute("basePath", ProjectXml.getValue("base_path_upload"));
+//        List<Favorable> favorableList = favorableMng.getFavorableByChannel(product.getChannelId());
+//        Favorable favorable = new Favorable();
+//        favorable.setId((long)0);
+//        favorable.setName("无");
+//        favorableList.add(0,favorable);
+//        model.addAttribute("favorableList",favorableList);
+
+
+
+
+		return "product/edit";
+	}
+
+
+	/**
+	 * 校验商品名称重复性
+	 * @param
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	@RequestMapping("/product/checkName.do")
+	public void checkName (String productName, String commerceId,String edit ,HttpServletRequest request, HttpServletResponse response){
+		net.sf.json.JSONObject json = new net.sf.json.JSONObject();
+		String success = "false";
+		Integer product = manager.getProduct(productName, commerceId);
+		if("edit".equals(edit)){
+			if(product>1){
+				success = "success";
+			}
+		}else {
+			if(product>0){
+				success = "success";
+			}
+		}
+
+		json.accumulate("success", success);
+		response.setContentType("text/html; charset=utf-8");
+		try {
+			response.getWriter().write(json.toString());
+		} catch (IOException e) {
+		}
+	}
+	@SuppressWarnings("unchecked")
+	@RequestMapping("/product/o_save.do")
+	public String save(Product bean, ProductExt ext,Long categoryId, Long brandId,
+					   Long[] tagIds, String productKeywords,String[] nature,Long[] picture,String[] colorImg,Long[] character,
+					   @RequestParam(value = "file", required = false) MultipartFile file,
+					   String fashionSwitchPic[],String fashionBigPic[],String fashionAmpPic[],
+					   Boolean[] isDefaults,Long[] colors,Long[] measures,Integer stockCounts[],
+					   Double[] salePrices,Double[] marketPrices,Double[] costPrices,
+					   Double[] scanningPrices,Double[] littlePrices,Double[] flashPrices,Double[] screenPrices,Long ctgId,
+					   HttpServletRequest request, ModelMap model) {
+        Commerce commerce = commerceService.getCommerceById(Long.valueOf(bean.getCommerceId()));
+        if(null!=commerce){
+            bean.setChannelId(String.valueOf(commerce.getChanIdRela().getId()));
+            bean.setChannelName(commerce.getChanIdRela().getChannelName());
+            bean.setCommerceId(commerce.getId()+"");
+            bean.setCommerceName(commerce.getName());
+        }
+		WebErrors errors = validateSave(bean, file, request);
+		if (errors.hasErrors()) {
+			return errors.showErrorPage(model);
+		}
+		productKeywords = StringUtils.replace(productKeywords, MessageResolver.getMessage(request, "product.keywords.split"), LIST_SPLIT);
+		String[] keywords = StringUtils.split(productKeywords, LIST_SPLIT);
+		Website web = SiteUtils.getWeb(request);
+		Map<String, String> exended = RequestUtils.getRequestMap(request, "exended_");
+		List li=new ArrayList(exended.keySet());
+		String[] names = new String[li.size()];
+		String[] values =  new String[li.size()];
+		if(stockCounts!=null){
+			Integer  stockCount =0;
+			for(Integer s:stockCounts){
+				stockCount+=s;
+			}
+			bean.setStockCount(stockCount);
+		}
+		for(int i=0;i<li.size();i++){
+			names[i]=(String) li.get(i);
+			values[i]=exended.get(li.get(i));
+		}
+		bean.setAttr( RequestUtils.getRequestMap(request, "attr_"));
+		bean = manager.save(bean, ext, web.getId(), categoryId, brandId, tagIds,
+				keywords,names,values,fashionSwitchPic,fashionBigPic,fashionAmpPic,file);
+
+		long adminId = (long)session.getAttribute(request,"_admin_id_key");
+		log.info("adminId = " + adminId);
+		Admin admin = adminMng.findById(adminId);
+		operationLogService.productAdd(admin.getUsername(), bean.getId() + "", bean.getId()+"");
+
+
+		if(picture!=null){
+			for(int i =0;i<picture.length;i++){
+				ProductStandard ps=new ProductStandard();
+				ps.setImgPath(colorImg[i]);
+				ps.setType(standardMng.findById(picture[i]).getType());
+				ps.setProduct(bean);
+				ps.setStandard(standardMng.findById(picture[i]));
+				ps.setDataType(true);
+				productStandardMng.save(ps);
+			}
+		}
+		if(character!=null){
+			for(int i =0;i<character.length;i++){
+				ProductStandard ps=new ProductStandard();
+				ps.setType(standardMng.findById(character[i]).getType());
+				ps.setProduct(bean);
+				ps.setStandard(standardMng.findById(character[i]));
+				ps.setDataType(false);
+				productStandardMng.save(ps);
+			}
+		}
+		saveProductFash(bean,nature,isDefaults,stockCounts,salePrices,marketPrices,costPrices, scanningPrices, littlePrices, flashPrices, screenPrices);
+		log.info("save Product. id={}", bean.getId());
+		model.addAttribute("message", "global.success");
+		model.addAttribute("brandId", brandId);
+        if(null!=bean.getCommerceId() && 1==bean.getProductStamp()){
+            booleanCacheService.setTrue(InteractType.MERCHANDISE, bean.getCommerceId());
+        }
+
+		return add(ctgId, request, model);
+	}
+
+	@SuppressWarnings("unchecked")
+	@RequestMapping("/product/o_update.do")
+	public String update(Product bean, ProductExt ext, Long categoryId,Long brandId,
+						 Long[] tagIds,String productKeywords,String[] nature,Long[] picture,String[] colorImg,Long[] character,
+						 @RequestParam(value = "file", required = false) MultipartFile file,
+						 String fashionSwitchPic[],String fashionBigPic[],String fashionAmpPic[],
+						 Boolean[] isDefaults,Long[] colors,Long[] measures,Integer stockCounts[],
+						 Double[] salePrices,Double[] marketPrices,Double[] costPrices,Long[] fashId,
+						 Double[] scanningPrices,Double[] littlePrices,Double[] flashPrices,Double[] screenPrices,
+						 Long ctgId,Integer pageNo,
+						 HttpServletRequest request, ModelMap model) {
+		WebErrors errors = validateUpdate(bean.getId(), file, request);
+		if (errors.hasErrors()) {
+			return errors.showErrorPage(model);
+		}
+		productKeywords = StringUtils.replace(productKeywords, MessageResolver
+				.getMessage(request, "product.keywords.split"), LIST_SPLIT);
+		String[] keywords = StringUtils.split(productKeywords, LIST_SPLIT);
+		Map<String, String> exended = RequestUtils.getRequestMap(request, "exended_");
+		List li=new ArrayList(exended.keySet());
+		String[] names = new String[li.size()];
+		String[] values =  new String[li.size()];
+		for(int i=0;i<li.size();i++){
+			names[i]=(String) li.get(i);
+			values[i]=exended.get(li.get(i));
+		}
+		Map<String, String> attr = RequestUtils.getRequestMap(request, "attr_");
+		if(stockCounts!=null){
+			Integer  stockCount =0;
+			for(Integer s:stockCounts){
+				stockCount+=s;
+			}
+			bean.setStockCount(stockCount);
+		}
+        Commerce commerce = commerceService.getCommerceById(Long.valueOf(bean.getCommerceId()));
+        if(null!=commerce){
+            bean.setChannelId(String.valueOf(commerce.getChanIdRela().getId()));
+            bean.setChannelName(commerce.getChanIdRela().getChannelName());
+            bean.setCommerceId(commerce.getId()+"");
+            bean.setCommerceName(commerce.getName());
+        }
+		bean = manager.update(bean, ext, categoryId, brandId, tagIds, keywords,names,values,attr,
+				fashionSwitchPic,fashionBigPic,fashionAmpPic,file);
+		List<ProductStandard> pcList=productStandardMng.findByProductId(bean.getId());
+		for(int j=0;j<pcList.size();j++){
+			productStandardMng.deleteById(pcList.get(j).getId());
+		}
+		if(picture!=null){
+			for(int i =0;i<picture.length;i++){
+				ProductStandard ps=new ProductStandard();
+				ps.setImgPath(colorImg[i]);
+				ps.setType(standardMng.findById(picture[i]).getType());
+				ps.setProduct(bean);
+				ps.setStandard(standardMng.findById(picture[i]));
+				ps.setDataType(true);
+				productStandardMng.save(ps);
+			}
+		}
+		if(character!=null){
+			for(int i =0;i<character.length;i++){
+				ProductStandard ps=new ProductStandard();
+				ps.setType(standardMng.findById(character[i]).getType());
+				ps.setProduct(bean);
+				ps.setStandard(standardMng.findById(character[i]));
+				ps.setDataType(false);
+				productStandardMng.save(ps);
+			}
+		}
+
+		if(bean.getCategory().getColorsize()){
+			java.util.Set<ProductFashion> pfList = bean.getFashions();
+			if(fashId!=null){
+				for(ProductFashion ps:pfList){
+					if(!Arrays.asList(fashId).contains(ps.getId())){
+						fashMng.deleteById(ps.getId());
+					}
+				}
+			}else{
+				for(ProductFashion ps:pfList){
+					fashMng.deleteById(ps.getId());
+				}
+			}
+//            if(0!=favorable&&null!=favorable){
+//                List<ProductFavorable> productFavorable = productFavorableMng.getListByProduct(bean.getId(),favorable);
+//                if(productFavorable.size()>0){
+//                    ProductFavorable productFavorable1 = productFavorable.get(0);
+//                    productFavorable1.setProductId(bean.getId());
+//                    productFavorable1.setProductStamp(bean.getProductStamp());
+//                    productFavorableMng.update(productFavorable1);
+//                }else {
+//                    ProductFavorable productFavorable1 = new ProductFavorable();
+//                    productFavorable1.setProductId(bean.getId());
+//                    productFavorable1.setFavorableId(favorable);
+//                    productFavorable1.setProductStamp(bean.getProductStamp());
+//                    productFavorableMng.save(productFavorable1);
+//                }
+//            }
+			updateProductFash(bean,fashId,nature,isDefaults,stockCounts,salePrices,marketPrices,costPrices,  scanningPrices, littlePrices, flashPrices, screenPrices);
+		}
+
+        if(null!=bean.getCommerceId()&&1==bean.getProductStamp()){
+            booleanCacheService.setTrue(InteractType.MERCHANDISE, bean.getCommerceId());
+        }
+
+
+		log.info("update Product. id={}.", bean.getId());
+		return list(ctgId,null,null,null, null,null,
+				null,null,null,null,null,pageNo, request, model,null,null,null,null);
+	}
+
+	@RequestMapping("/product/o_delete.do")
+	public String delete(Long[] ids, Long ctgId, Boolean isRecommend,
+						 Boolean isSpecial, Integer pageNo, HttpServletRequest request,
+						 ModelMap model) {
+		//删除只显示前五个id
+		String idCollection = "";
+		if(ids.length>5){
+			for (int i = 0; i < 5; i++) {
+				if(i==4){
+					idCollection +=ids[i];
+				}else {
+					idCollection +=ids[i]+",";
+				}
+			}
+		}else {
+			for (int i = 0; i < ids.length; i++) {
+				if(i==ids.length-1){
+					idCollection +=ids[i];
+				}else {
+					idCollection +=ids[i]+",";
+				}
+			}
+		}
+
+		try{
+			long adminId = (long)session.getAttribute(request,"_admin_id_key");
+			log.info("adminId = " + adminId);
+			Admin admin = adminMng.findById(adminId);
+			operationLogService.productDelete(admin.getUsername(), idCollection, idCollection);
+		}catch (Exception e){
+			log.error("add log fail",e);
+		}
+		WebErrors errors = validateDelete(ids, request);
+		if (errors.hasErrors()) {
+			return errors.showErrorPage(model);
+		}
+		Product[] beans;
+		try {
+			beans = manager.deleteByIds(ids);
+			for (Product bean : beans) {
+               if(null!=bean.getCommerceId()&&1==bean.getProductStamp()){
+                    booleanCacheService.setTrue(InteractType.MERCHANDISE, bean.getCommerceId());
+                }
+				log.info("delete Product. id={}", bean.getId());
+			}
+		} catch (Exception e) {
+			return "redirect:v_error.do";
+		}
+		return list(ctgId,null,isRecommend, isSpecial, null,null,null,null,null,null,null,pageNo, request, model,null,null,null,null);
+	}
+
+
+
+	@RequestMapping("/product/v_error.do")
+	public String error(HttpServletRequest request, ModelMap model) {
+		return "product/error";
+	}
+
+	@RequestMapping(value = "/product/v_standardTypes_add.do")
+	public String standardTypesAdd(Long categoryId,HttpServletRequest request,
+								   HttpServletResponse response, ModelMap model) {
+		List<StandardType> standardTypeList = standardTypeMng.getList(categoryId);
+		model.addAttribute("standardTypeList", standardTypeList);
+		model.addAttribute("digit", standardTypeList.size());
+		response.setHeader("Cache-Control", "no-cache");
+		response.setContentType("text/json;charset=UTF-8");
+		return "product/standardTypes_add";
+	}
+
+	@RequestMapping(value = "/product/v_standards_add.do")
+	public String standards(Long standardTypeId,HttpServletRequest request,
+							HttpServletResponse response, ModelMap model) throws JSONException {
+		List<Standard> sList=standardMng.findByTypeId(standardTypeId);
+		model.addAttribute("sList", sList);
+		model.addAttribute("standardType", standardTypeMng.findById(standardTypeId));
+		response.setHeader("Cache-Control", "no-cache");
+		response.setContentType("text/json;charset=UTF-8");
+		return "product/standards_add";
+	}
+
+	@RequestMapping("/product/o_create_index.do")
+	public String createIndex(HttpServletRequest request,
+							  HttpServletResponse response, ModelMap model) {
+		String path = servletContext.getRealPath(Constants.LUCENE_JSPGOU);
+		boolean success = false;
+		try {
+			int count = luceneProductSvc.index(path, null, null, null);
+			model.addAttribute("count", count);
+			success = true;
+		} catch (CorruptIndexException e) {
+			log.error("", e);
+		} catch (LockObtainFailedException e) {
+			log.error("", e);
+		} catch (IOException e) {
+			log.error("", e);
+		}
+		model.addAttribute("success", success);
+		return "product/create_index_result";
+	}
+
+
+
+	@RequestMapping("/product/o_delFashion.do")//异步删除商品款式(wangzewu)
+	public String deleFashion(Long id,Long productId,HttpServletResponse response) throws JSONException{
+		Boolean b=productFashionMng.getOneFash(productId);
+		JSONObject j=new JSONObject();
+		if(b!=null&&b){
+			productFashionMng.deleteById(id);
+			j.put("message", "删除成功！");
+			j.put("boo", true);
+			ResponseUtils.renderJson(response, j.toString());
+			return null;
+		}else{
+			j.put("message", "必须留一款式！");
+			j.put("boo", false);
+			ResponseUtils.renderJson(response, j.toString());
+			return null;
+		}
+	}
+	@RequestMapping("/product/v_bind_commerce.do")
+	public String bindCommerce(String id ,Long ctgId, Integer pageNo,HttpServletRequest request, ModelMap model) {
+		ArrayList<HashMap<String,Object>> list=new ArrayList<HashMap<String, Object>>();
+		HashMap<String,Object> map=new HashMap<String, Object>();
+		HashMap<String,Object> map2=new HashMap<String, Object>();
+		String channelId=(String)session.getAttribute(request,CHANNELID);
+		List<Commerce> commerce = commerceService.getAllCommerces();
+		List<Commerce> channelCommerce = new ArrayList<Commerce>();
+		if(channelId==null){
+			model.addAttribute("commerces",commerce );
+		}else {
+			for (int i=0;i<commerce.size();i++){
+				if(channelId.equals(commerce.get(i).getChanIdRela().getId())){
+					channelCommerce.add(commerce.get(i));
+				}
+			}
+			model.addAttribute("commerces",channelCommerce );
+		}
+		model.addAttribute("productId",id);
+		model.addAttribute("ctgId",ctgId);
+		model.addAttribute("pageNo",pageNo);
+		return "product/bind_commerce";
+	}
+	@RequestMapping("/product/v_bind_commerce_save.do")
+	public String bindCommerceSave(String productId,String commerceId ,Long ctgId, Boolean isRecommend,
+								   Boolean isSpecial, Integer pageNo,HttpServletRequest request,ModelMap model) {
+
+
+		Product product = manager.findById(Long.valueOf(productId));
+		List<Commerce> commerce = commerceService.getAllCommerces();
+		for(int i=0;i<commerce.size();i++){
+			if(commerceId.equals(commerce.get(i).getCommerceId())){
+				product.setChannelId(commerce.get(i).getChanIdRela().getUuid());
+				product.setChannelName(commerce.get(i).getChanIdRela().getChannelName());
+				product.setCommerceId(commerce.get(i).getId()+"");
+				product.setCommerceName(commerce.get(i).getName());
+			}
+		}
+
+
+		manager.update(product);
+
+		return list(ctgId,null,isRecommend, isSpecial, null,null,null,null,null,null,null,pageNo, request, model,null,null,null,null);
+	}
+	@RequestMapping("/product/o_checked.do")
+	public String check(String productId ,Integer type, Long ctgId, Boolean isRecommend,
+						Boolean isSpecial, Integer pageNo, HttpServletRequest request,
+						ModelMap model) {
+		Product product = manager.findById(Long.valueOf(productId));
+		if (2==type){
+			try{
+				long adminId = (long)session.getAttribute(request,"_admin_id_key");
+				log.info("adminId = " + adminId);
+				Admin admin = adminMng.findById(adminId);
+				operationLogService.productOnline(admin.getUsername(), productId, productId);
+			}catch (Exception e){
+				log.error("add log fail",e);
+			}
+			product.setOnSale(true);
+		}else if (3==type){
+			try{
+				long adminId = (long)session.getAttribute(request,"_admin_id_key");
+				log.info("adminId = " + adminId);
+				Admin admin = adminMng.findById(adminId);
+				operationLogService.productOffline(admin.getUsername(), productId, productId);
+			} catch (Exception e){
+				log.error("add log fail",e);
+			}
+			product.setOnSale(false);
+		}
+		try {
+			manager.update(product);
+		}catch (Exception e){
+			log.info("check false",e);
+		}
+        booleanCacheService.setTrue(InteractType.MERCHANDISE, product.getCommerceId());
+		return list(ctgId,null,isRecommend, isSpecial, null,null,null,null,null,null,null,pageNo, request, model,null,null,null,null);
+	}
+
+
+
+	private void saveProductFash(Product bean,String[] nature,Boolean[] isDefaults,Integer[] stockCounts,
+								 Double[] salePrices,Double[] marketPrices,Double[] costPrices ,Double[] scanningPrices,Double[] littlePrices,Double[] flashPrices,Double[] screenPrices){
+		if(nature!=null){
+			for(int i =0;i<nature.length;i++){
+				String[] arr;
+				ProductFashion pfash=new ProductFashion();
+				pfash.setCreateTime(new Date());
+				pfash.setIsDefault(isDefaults[i]);
+				pfash.setStockCount(stockCounts[i]);
+				pfash.setMarketPrice(marketPrices[i]);
+				pfash.setSalePrice(salePrices[i]);
+				pfash.setCostPrice(costPrices[i]);
+
+				pfash.setScanningPrice(scanningPrices[i]);
+				pfash.setFlashPrice(flashPrices[i]);
+				pfash.setScreenPrice(screenPrices[i]);
+				pfash.setLittlePrice(littlePrices[i]);
+
+				pfash.setProductId(bean);
+				pfash.setNature(nature[i]);
+				arr=nature[i].split("_");
+				ProductFashion fashion = productFashionMng.save(pfash,arr);
+				productFashionMng.addStandard(fashion,arr);
+				if(isDefaults[i]){
+					bean.setCostPrice(costPrices[i]);
+					bean.setMarketPrice(marketPrices[i]);
+					bean.setSalePrice(salePrices[i]);
+					bean.setScanningPrice(scanningPrices[i]);
+					bean.setLittlePrice(littlePrices[i]);
+					bean.setFlashPrice(flashPrices[i]);
+					bean.setScreenPrice(screenPrices[i]);
+
+					manager.update(bean);
+				}
+			}
+		}
+	}
+
+
+	private void updateProductFash(Product bean,Long[] fashId,String[] nature,Boolean[] isDefaults,Integer[] stockCounts,
+								   Double[] salePrices,Double[] marketPrices,Double[] costPrices, Double[] scanningPrices,Double[] littlePrices,Double[] flashPrices,Double[] screenPrices ){
+		if(nature!=null){
+			for(int i =0;i<nature.length;i++){
+				String[] arr;
+				ProductFashion pfash;
+				if(fashId!=null&&i<fashId.length){
+					pfash=productFashionMng.findById(fashId[i]);
+					pfash.setCreateTime(new Date());
+					pfash.setIsDefault(isDefaults[i]);
+					pfash.setStockCount(stockCounts[i]);
+					pfash.setMarketPrice(marketPrices[i]);
+					pfash.setSalePrice(salePrices[i]);
+					pfash.setCostPrice(costPrices[i]);
+					pfash.setProductId(bean);
+					pfash.setNature(nature[i]);
+
+					pfash.setScanningPrice(scanningPrices[i]);
+					pfash.setLittlePrice(littlePrices[i]);
+					pfash.setFlashPrice(flashPrices[i]);
+					pfash.setScreenPrice(screenPrices[i]);
+
+					arr=nature[i].split("_");
+					productFashionMng.updateStandard(pfash, arr);
+					if(isDefaults[i]){
+						bean.setCostPrice(costPrices[i]);
+						bean.setMarketPrice(marketPrices[i]);
+						bean.setSalePrice(salePrices[i]);
+						bean.setScanningPrice(scanningPrices[i]);
+						bean.setLittlePrice(littlePrices[i]);
+						bean.setFlashPrice(flashPrices[i]);
+						bean.setScreenPrice(screenPrices[i]);
+						manager.update(bean);
+					}
+				}else{
+					pfash = new ProductFashion();
+					pfash.setCreateTime(new Date());
+					pfash.setIsDefault(isDefaults[i]);
+					pfash.setStockCount(stockCounts[i]);
+					pfash.setMarketPrice(marketPrices[i]);
+					pfash.setSalePrice(salePrices[i]);
+					pfash.setCostPrice(costPrices[i]);
+					pfash.setProductId(bean);
+					pfash.setNature(nature[i]);
+					arr=nature[i].split("_");
+					ProductFashion fashion = productFashionMng.save(pfash,arr);
+					productFashionMng.addStandard(fashion,arr);
+					if(isDefaults[i]){
+						bean.setCostPrice(costPrices[i]);
+						bean.setMarketPrice(marketPrices[i]);
+						bean.setSalePrice(salePrices[i]);
+						bean.setScanningPrice(scanningPrices[i]);
+						bean.setLittlePrice(littlePrices[i]);
+						bean.setFlashPrice(flashPrices[i]);
+						bean.setScreenPrice(screenPrices[i]);
+						manager.update(bean);
+					}
+				}
+
+			}
+		}
+	}
+
+	private WebErrors validateSave(Product bean, MultipartFile file,
+								   HttpServletRequest request) {
+		WebErrors errors = WebErrors.create(request);
+		if (file != null && !file.isEmpty()) {
+			String name = file.getOriginalFilename();
+			vldImage(name, errors);
+		}
+		bean.setWebsite(SiteUtils.getWeb(request));
+		return errors;
+	}
+
+	private WebErrors validateEdit(Long id, HttpServletRequest request) {
+		WebErrors errors = WebErrors.create(request);
+		errors.ifNull(id, "id");
+		vldExist(id, errors);
+		return errors;
+	}
+
+	private WebErrors validateUpdate(Long id, MultipartFile file,
+									 HttpServletRequest request) {
+		WebErrors errors = WebErrors.create(request);
+		errors.ifNull(id, "id");
+		if (file != null && !file.isEmpty()) {
+			String name = file.getOriginalFilename();
+			vldImage(name, errors);
+			if (errors.hasErrors()) {
+				return errors;
+			}
+		}
+		vldExist(id, errors);
+		return errors;
+	}
+
+	private WebErrors validateDelete(Long[] ids, HttpServletRequest request) {
+		WebErrors errors = WebErrors.create(request);
+		errors.ifEmpty(ids, "ids");
+		for (Long id : ids) {
+			vldExist(id, errors);
+		}
+		return errors;
+	}
+
+	private void vldExist(Long id, WebErrors errors) {
+		if (errors.hasErrors()) {
+			return;
+		}
+		Product entity = manager.findById(id);
+		errors.ifNotExist(entity, Product.class, id);
+	}
+
+	private void vldImage(String filename, WebErrors errors) {
+		if (errors.hasErrors()) {
+			return;
+		}
+		String ext = FilenameUtils.getExtension(filename);
+		if (!ImageUtils.isImage(ext)) {
+			errors.addErrorString("not support image extension:" + filename);
+		}
+	}
+
+    private List sendMassage (){
+        List<Map<String,Object>> sendMassageList = new ArrayList<>();
+        Map<String,Object> sendMassageMap = new HashMap<>();
+        sendMassageMap.put("id",0);
+        sendMassageMap.put("name","不发送");
+        sendMassageList.add(sendMassageMap);
+        sendMassageMap = new HashMap<>();
+        sendMassageMap.put("id",1);
+        sendMassageMap.put("name","发送凭证");
+        sendMassageList.add(sendMassageMap);
+        return sendMassageList;
+    }
+
+	private List lackRemind (){
+		List<Map<String,Object>> lackRemindList = new ArrayList<>();
+		Map<String,Object> lackRemindMap = new HashMap<>();
+		lackRemindMap.put("id",0);
+		lackRemindMap.put("name","否");
+		lackRemindList.add(lackRemindMap);
+		lackRemindMap = new HashMap<>();
+		lackRemindMap.put("id",1);
+		lackRemindMap.put("name","是");
+		lackRemindList.add(lackRemindMap);
+		return lackRemindList;
+	}
+    private List productStamps(){
+        List<Map<String,String>> productStampList = new ArrayList<>();
+        Map<String,String> productStampMap = new HashMap<>();
+        productStampMap.put("id","");
+        productStampMap.put("name","无");
+        productStampList.add(productStampMap);
+        productStampMap = new HashMap<>();
+        productStampMap.put("id","1");
+        productStampMap.put("name","本地商品");
+        productStampList.add(productStampMap);
+        productStampMap = new HashMap<>();
+        productStampMap.put("id","2");
+        productStampMap.put("name","虚拟商品");
+        productStampList.add(productStampMap);
+        productStampMap = new HashMap<>();
+        productStampMap.put("id","3");
+        productStampMap.put("name","商城商品");
+        productStampList.add(productStampMap);
+        productStampMap = new HashMap<>();
+        productStampMap.put("id","4");
+        productStampMap.put("name","金融产品");
+        productStampList.add(productStampMap);
+        return productStampList;
+    }
+	private List loginOrNot (){
+		List<Map<String,Object>> loginList = new ArrayList<>();
+		Map<String,Object> loginMap = new HashMap<>();
+		loginMap.put("id",1);
+		loginMap.put("name","免登录");
+		loginList.add(loginMap);
+		loginMap = new HashMap<>();
+		loginMap.put("id",0);
+		loginMap.put("name","登录");
+		loginList.add(loginMap);
+		return loginList;
+	}
+
+	private List buyStep (){
+		List<Map<String,Object>> buyStepList = new ArrayList<>();
+		Map<String,Object> buyStepMap = new HashMap<>();
+		buyStepMap.put("id",1);
+		buyStepMap.put("name","一步");
+		buyStepList.add(buyStepMap);
+		buyStepMap = new HashMap<>();
+		buyStepMap.put("id",2);
+		buyStepMap.put("name","两步");
+		buyStepList.add(buyStepMap);
+		return buyStepList;
+	}
+
+	@Autowired
+	private StandardMng standardMng;
+	@Autowired
+	private StandardTypeMng standardTypeMng;
+	@Autowired
+	private ProductFashionMng fashMng;
+	@Autowired
+	private LuceneProductSvc luceneProductSvc;
+	@Autowired
+	private ProductTagMng productTagMng;
+	@Autowired
+	private CategoryMng categoryMng;
+	@Autowired
+	private ProductMng manager;
+	@Autowired
+	private ProductTypePropertyMng productTypePropertyMng;
+	@Autowired
+	private ProductFashionMng productFashionMng;
+	@Autowired
+	private ProductTypeMng productTypeMng;
+	@Autowired
+	private ExendedMng exendedMng;
+	@Autowired
+	private ProductStandardMng productStandardMng;
+
+	private ServletContext servletContext;
+	@Autowired
+	private SessionProvider session;
+
+	@Resource
+	private OperationLogService operationLogService;
+
+	@Resource
+	private AdminMng adminMng;
+
+	@Autowired
+	private CommerceService commerceService;
+
+	@Autowired
+	private ChannelService channelService;
+
+    @Autowired
+    private FavorableMng favorableMng;
+    @Autowired
+    private ProductFavorableMng productFavorableMng;
+
+
+
+	public void setServletContext(ServletContext servletContext) {
+		this.servletContext = servletContext;
+	}
+
+	public SessionProvider getSession() {
+		return session;
+	}
+
+	public void setSession(SessionProvider session) {
+		this.session = session;
+	}
+}

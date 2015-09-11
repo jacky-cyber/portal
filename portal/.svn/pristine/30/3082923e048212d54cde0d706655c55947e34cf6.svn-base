@@ -1,0 +1,396 @@
+package com.ifunpay.portal.controller;
+
+import com.ifunpay.front.TerminalFrontRemoteControl;
+import com.ifunpay.front.bean.response.BaseRestResponse;
+import com.ifunpay.portal.ProjectXml;
+import com.ifunpay.portal.entity.Channel;
+import com.ifunpay.portal.entity.MemberUserEntity;
+import com.ifunpay.portal.entity.order.OrderEntity;
+import com.ifunpay.portal.entity.order.OrderProduct;
+import com.ifunpay.portal.enums.PayMethodEnum;
+import com.ifunpay.portal.service.MemberUserService;
+import com.ifunpay.portal.service.OrderVoucherService;
+import com.ifunpay.portal.service.ThreadPoolService;
+import com.ifunpay.portal.service.commerce.ChannelService;
+import com.ifunpay.portal.service.commerce.NewOrderVoucherService;
+import com.ifunpay.portal.service.order.OrderEntityService;
+import com.ifunpay.portal.service.order.OrderProductService;
+import com.ifunpay.util.Constant;
+import com.ifunpay.util.web.cookie.CookieUtil;
+import com.jspgou.cms.dao.ProductDao;
+import com.jspgou.cms.entity.Product;
+import com.jspgou.cms.manager.ProductMng;
+import com.jspgou.common.web.session.SessionProvider;
+import com.jspgou.core.manager.UserMng;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Created by CongLong Xie on 2015/3/6.
+ */
+@Controller
+@RequestMapping("")
+public class AShootController {
+    private Logger logger = Logger.getLogger(AShootController.class);
+
+    @Resource
+    private ThreadPoolService threadPoolService;
+
+    @Resource
+    private TerminalFrontRemoteControl terminalFrontRemoteControl;
+
+    @Resource
+    private ProductDao productDao;
+
+    @Resource
+    private ChannelService channelService;
+
+
+    @Resource
+    private MemberUserService memberUserService;
+
+    @Resource
+    private OrderEntityService orderEntityService;
+
+    @Resource
+    private OrderProductService orderProductService;
+
+
+    private static final String SCAN_TO_BUY ="1";//扫码购买
+    /**
+     * CCB 一拍支付入口
+     *
+     */
+    @Deprecated
+    @RequestMapping("mallszccb/pd/{apId}/{flag}/{terminalId}/{needlogin}/{step}")
+    public void toPDAndNoSerialDHB(ModelAndView mav, @PathVariable String apId, @PathVariable String flag, @PathVariable String terminalId, @PathVariable String needlogin, @PathVariable String step, HttpServletRequest request,HttpServletResponse response) {
+        try {
+            logger.info("no serial number scan DHB ..");
+            String serialNo = null;
+            String url ="/mvc/personCore/order/"+apId+"/"+flag+"/"+terminalId+"/"+serialNo+"/"+"0";
+            request.getRequestDispatcher(url).forward(request, response);
+        } catch (ServletException e) {
+            logger.info("重定向 servlet false",e);
+        } catch (IOException e) {
+            logger.info("重定向 IO 异常",e);
+        }
+
+    }
+
+    @Deprecated
+    @RequestMapping("mallszccb/pd/{apId}/{flag}/{terminalId}/{needlogin}/{step}/{serialNo}")
+    public void toPDAndSerialForDHB(ModelAndView mav, @PathVariable String apId, @PathVariable String flag, @PathVariable String terminalId, @PathVariable String needlogin, @PathVariable String step,@PathVariable String serialNo, HttpServletRequest request,HttpServletResponse response) {
+        try {
+            logger.info("apId ="+apId+",flag ="+flag+",terminal id ="+terminalId+",needlogin="+needlogin+",step="+step+",serial no ="+serialNo);
+            String url ="/mvc/personCore/order/"+apId+"/"+flag+"/"+terminalId+"/"+serialNo+"/"+"0";
+            request.getRequestDispatcher(url).forward(request, response);
+        } catch (ServletException e) {
+            logger.info("重定向 servlet false",e);
+        } catch (IOException e) {
+            logger.info("重定向 IO 异常",e);
+        }
+    }
+    @RequestMapping("orderConfirm_v2")
+    public ModelAndView orderConfirm_v2(ModelAndView mav, HttpServletRequest request,
+                                       HttpServletResponse response) {
+        HttpSession session = request.getSession();
+        String terminalId = (String) session.getAttribute("tId");
+        //判断终端机号码是否合法
+        String serialNo = (String) session.getAttribute("serialNo");
+        Integer needLogin = (Integer) session.getAttribute("needLogin");
+        Long productId = Long.valueOf(request.getParameter("apId"));
+        //本地商品一定要有交易流水serialNo
+        Product product = productMng.findById(productId);
+        if(product.getProductStamp()==1){
+            //本地商品
+            if("null".equals(serialNo)){
+                mav.addObject("msg","本地商品必须有交易流水。");
+                mav.setViewName("error");
+                return mav;
+            }
+        }
+        Long[]  apId = {productId};
+        String memberUserId = (String) session.getAttribute("member");
+        //获得支付发方式
+        PayMethodEnum   payMethodEnum = PayMethodEnum.AShotToPay;//一拍支付
+        MemberUserEntity memberUserEntity = null;
+        String deviceName = null;
+        if (0==needLogin) {
+            if (null != memberUserId) {
+                memberUserEntity = memberUserService.getEntityByName(memberUserId);
+            }
+        } else if (1==needLogin) {
+//            memberUserEntity = memberUserService.getEntityByName("13800138000");
+            Optional<String> cookie = CookieUtil.getCookieValue(request, Constant.DEVICE_COOKIE_NAME);
+            deviceName = cookie.orElse(null);
+            logger.info("device name ="+deviceName);
+        }
+        int quantity = 1;
+        String quanlityRequest = request.getParameter("quantity");
+        if (quanlityRequest != null || !("".equals(quanlityRequest))) {
+            quantity = Integer.parseInt(quanlityRequest);
+        }
+        Integer[] quantityList = {quantity};
+        String receiveName = request.getParameter("consignee")==""?null:request.getParameter("consignee");
+
+        String phone = "".equals(request.getParameter("consignee_phone"))?null:request.getParameter("consignee_phone");
+        String province = "".equals(request.getParameter("pro"))?null:request.getParameter("pro");
+        String city = "".equals(request.getParameter("city"))?null:request.getParameter("city");
+        String addressDetails = "".equals(request.getParameter("detail"))?null:request.getParameter("detail");
+
+        logger.info("serial =="+serialNo+",serialNo==null?");
+        if(!"null".equals(serialNo)) {
+            List<OrderEntity> oe = orderEntityService.findOrderEntityByTerminalIdAndSerialNo(terminalId, serialNo);
+            if (oe != null && oe.size() > 0) {
+                mav.addObject("msg","每笔交易只允许一个人扫码喔，请稍等片刻后再来。");
+                mav.setViewName("error");
+                return mav;
+            }
+        }
+
+        OrderEntity orderEntity =orderEntityService.buildOrderEntity(apId,payMethodEnum,memberUserEntity,terminalId,serialNo,quantityList,receiveName,phone,province,city,addressDetails,deviceName);
+
+        String payInfoId = null;
+        List<OrderProduct> orderProductList = orderProductService.getOrderProductByOrderId(orderEntity.getCode());
+        OrderProduct orderProduct =orderProductList.size()==0?null:orderProductList.get(0);
+        Integer payAccountStatus = orderProduct.getCommerce().getPayAccountStatus();
+        if(payAccountStatus!=null){
+            if(1==payAccountStatus){
+                payInfoId=orderProduct.getCommerce().getPayAccountId();
+            }else if(0==payAccountStatus){
+                payInfoId=orderEntity.getChannel().getBankPayInfoId();
+            }
+
+        }else {
+            payInfoId=orderEntity.getChannel().getBankPayInfoId();
+        }
+        if(apId!=null) {
+            try {
+                mav.setViewName("redirect:/mvc/mobilePay/" + payInfoId + "/" + orderEntity.getTotalAmount() + "/" + orderEntity.getCode());
+            }catch (Exception e){
+                logger.info("",e);
+            }
+        }else {
+            mav.setViewName("error");
+            mav.addObject("content", "<h1>获得商品ID为空</h1>");
+        }
+        return mav;
+    }
+
+    /**
+     * 扫码响应
+     * @param terminalId
+     * @param serialNo
+     */
+    private void scanFeedBack(String terminalId,String serialNo){
+            threadPoolService.execute(() -> {
+                logger.info("start to scan throw remote control");
+                BaseRestResponse response = terminalFrontRemoteControl.scanned(terminalId, serialNo);
+                logger.info("scanned response: " + response);
+            });
+    }
+
+    /**
+     * 民生银行一拍支付
+     * @param mav
+     * @param apId
+     * @param flag
+     * @param terminalId
+     * @param needlogin
+     * @param step
+     * @param request
+     * @param serialNo
+     * @return
+     */
+    @RequestMapping("mallszccb/pdCMBC/{apId}/{flag}/{terminalId}/{needlogin}/{step}/{serialNo}")
+    public ModelAndView toPDForCMBC(ModelAndView mav, @PathVariable String apId, @PathVariable String flag, @PathVariable String terminalId, @PathVariable String needlogin, @PathVariable String step, HttpServletRequest request,@PathVariable String serialNo) {
+        logger.info("cmbc a shot");
+        HttpSession session = request.getSession();
+        session.setAttribute("tId", terminalId);
+        session.setAttribute("flag", flag);
+
+        try {
+
+            if(SCAN_TO_BUY.equals(flag)) scanFeedBack(terminalId,serialNo);
+
+            //将serial放入session
+            if(serialNo != null && serialNo.length() > 0){
+                request.getSession().setAttribute("serialNo", serialNo);
+            }else{
+                request.getSession().setAttribute("serialNo", null); // clear serial no in session
+            }
+
+
+            Product product = productDao.findById(Long.parseLong(apId));
+            logger.info("product name=" + product.getName());
+            mav.addObject("product", product);
+
+            Channel channel = channelService.getChannelByChannelId(Long.parseLong(product.getChannelId()));
+            String bankInfo = "";
+            if(channel!=null){
+                bankInfo = channel.getBankPayInfoId();
+            }
+            logger.info("bank info =="+bankInfo);
+            logger.info("type=="+product.getProductStamp());
+            mav.addObject("prodType",product.getProductStamp());
+        }catch (Exception e){
+            logger.error("conduct error",e);
+        }
+        mav.setViewName("mall/productConfirmCMBC");
+
+        return mav;
+    }
+
+
+
+    /**
+     * purpose:<br>
+     * step: <br>
+     *
+     * @param request
+     * @return
+     */
+    @RequestMapping("mallszccb/generate-voucher")
+    public ModelAndView generateVoucher(HttpServletRequest request, ModelAndView mav) {
+        logger.info("send voucher starting ...");
+
+        String orderId = request.getParameter("orderId");
+
+        List<OrderProduct> orderEntity = orderProductService.getOrderProductByOrderId(orderId);
+
+        mav.addObject("orderId", orderId);
+        Product product = null;
+        try {
+
+            if (orderEntity == null) {
+                mav.setViewName("mall/error_no_order");
+                return mav;
+            } else {
+                product = orderEntity.get(0).getProduct();
+                mav.addObject("payStatus",orderEntity.get(0).getEntity().getPaymentStatus());
+            }
+        } catch (Exception e) {
+            logger.info("", e);
+        }
+
+
+        String proName = product.getName();
+
+        logger.info("product Name is " + proName);
+
+        mav.addObject("proType", product.getProductStamp());//1-本地商品
+
+
+
+       /* OrderVoucher orderVoucherExist = newOrderVoucherDao.findOrderVoucherByVoucherCode(orderId);
+
+        if(orderVoucherExist == null) {
+            OrderVoucher orderVoucher = newOrderVoucherDao.generateVoucher(orderId);
+        }else{
+            logger.info("voucher had been generated.");
+        }
+*/
+
+        mav.addObject("orderId", orderId);
+        mav.addObject("productName", proName);
+
+
+        mav.setViewName("mall/notify_ccb_mobile_app");
+        return mav;
+    }
+
+
+    /**
+     * validate
+     * @param
+     * @param request
+     * @return
+     */
+    @RequestMapping("mallszccb/validate-voucher-code")
+    public String validateVoucherCode(HttpServletRequest request){
+
+        String voucherCode = request.getParameter("voucherCode");
+
+        boolean result = newOrderVoucherService.validateVoucher(request, voucherCode);
+
+        logger.info("validate result is :"+result);
+
+        return "redirect:/jeeadmin/portal/voucher/v_list.do";
+    }
+
+
+
+    @RequestMapping("mallszccb/toOrderConfirmRd.html")
+    public String toOrderConfirmRd(ModelAndView mav, HttpServletRequest request) {
+
+        logger.info(" 确认订单 toOrderConfirm.redirct.....");
+
+        String apId = request.getParameter("apId");
+        String terminalId = request.getParameter("terminalId");
+        String flag = request.getParameter("flag");
+        String needLogin = request.getParameter("needLogin");
+        String serialNo = request.getParameter("serialNo");
+
+        logger.info("apId ="+apId);
+        logger.info("terminalId ="+terminalId);
+        logger.info("flag ="+flag);
+        logger.info("needLogin ="+needLogin);
+        logger.info("serialNo ="+serialNo);
+
+        mav.addObject("apId",apId);
+        mav.addObject("needLogin",needLogin);
+        mav.addObject("flag",flag);
+        mav.addObject("serialNo", serialNo);
+        mav.addObject("terminalId", terminalId);
+
+
+        Product apInfo = productDao.findById(Long.parseLong(apId));
+        mav.addObject("isPost",0);//默认不需要邮寄
+        mav.addObject("product",apInfo);
+        String servicePhone = ProjectXml.getValue("service-phone");
+        mav.addObject("servicePhone",servicePhone);
+        mav.setViewName("mall/orderConfirmRedirect");
+       // return mav;
+        return "redirect:/mvc/dhb/mallszccb/pd/"+apId+"/"+flag+"/"+terminalId+"/"+needLogin+"/1/"+serialNo;
+    }
+
+    @RequestMapping("test")
+    public String test(String orderId){
+        logger.info("test");
+        orderVoucherService.reSendVoucher(orderId);
+        String viewName ="redirect:/mvc/mallszccb/generate-voucher?orderId="+orderId;
+        return viewName;
+    }
+
+    @RequestMapping("admin/test")
+    public String testShiro(){
+        return "";
+    }
+
+    @Resource
+    private OrderVoucherService orderVoucherService;
+
+    @Resource
+    private UserMng userMng;
+
+    @Resource
+    private SessionProvider session;
+
+    @Resource
+    private NewOrderVoucherService newOrderVoucherService;
+
+    @Resource
+    private ProductMng productMng;
+}

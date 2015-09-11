@@ -1,0 +1,267 @@
+package com.ifunpay.portal.service;
+
+import com.ifunpay.portal.dao.OrderPayRefundDao;
+import com.ifunpay.portal.dao.TerminalOrderDao;
+import com.ifunpay.portal.entity.Commerce;
+import com.ifunpay.portal.entity.OrderPayRefundEntity;
+import com.ifunpay.portal.entity.order.OrderEntity;
+import com.ifunpay.portal.entity.order.OrderProduct;
+import com.ifunpay.portal.enums.PaymentStatusEnum;
+import com.ifunpay.portal.enums.ShipmentStatusEnum;
+import com.ifunpay.portal.service.order.OrderEntityService;
+import com.ifunpay.portal.service.order.OrderProductService;
+import com.ifunpay.portal.util.Arith;
+import com.jspgou.cms.dao.OrderDao;
+import com.jspgou.cms.dao.SequenceDao;
+import com.jspgou.cms.entity.Order;
+import com.jspgou.cms.manager.ProductMng;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * Created by CongLong Xie on 2015/3/10.
+ */
+@Service
+public class NotifyPayService {
+    private Logger logger = LoggerFactory.getLogger(NotifyPayService.class);
+
+    @Resource
+    private OrderDao orderDao;
+
+    @Resource
+    private TerminalOrderDao terminalOrderDao;
+
+    @Resource
+    private OrderPayRefundDao orderPayRefundDao;
+
+    @Autowired
+    private SequenceDao sequenceDao;
+
+    @Resource
+    private OrderEntityService orderEntityService;
+
+    @Resource
+    private ThreadPoolService threadPoolService;
+
+    @Resource
+    private AlterTerminalStockService alterTerminalStockService;
+
+    @Resource
+    private OrderProductService orderProductService;
+
+    @Resource
+    private ProductMng productMng;
+
+
+    /**
+     *
+     * purpose: 修改新订单状态，保存付款信息
+     * step: <br>
+     * @param orderNo  平台Id
+     * @param payAmount 支付金额
+     * @throws Exception
+     */
+    @Transactional
+    public void updateNewOrderPaymentStatus(String accountName,String orderNo, String payAmount,String account ,String serialNumber) throws Exception {
+        //根据订单ID获取订单对象
+        OrderEntity orderEntity = orderEntityService.findOrderEntityByOrderId(orderNo);
+
+        List<OrderProduct> orderProducts = orderProductService.getOrderProductByOrderId(orderNo);
+        Commerce commerce = null;
+        if(orderProducts.size()>0){
+            commerce = orderProducts.get(0).getCommerce();
+        }
+
+        if (orderEntity == null) {
+            throw new Exception("此["+orderNo+"]订单不存在");
+        }
+
+        String orderId = orderEntity.getCode();
+        double totalAcount = orderEntity.getTotalAmount();
+        // 检查返回金额
+        boolean b = checkPayReturnAmountForMobileAppCCB(orderId, payAmount, totalAcount);
+
+        if (!b) {
+            throw new Exception("通知支付结果对应订单的金额不一致：订单号[" + orderId + "],通知金额：" + payAmount+ ",订单金额：" + totalAcount*100);
+        }
+
+        //修改订单支付状态 1-未支付；2-已支付；3-已退款
+
+        updateNewOrderPaymentStatus(orderId);
+
+        logger.info("修改支付状态...........................");
+
+
+        //保存收款信息
+        OrderPayRefundEntity orderPayRefundEntity = new OrderPayRefundEntity();
+        orderPayRefundEntity.setId(sequenceDao.getOrderRefundEntityId());
+        orderPayRefundEntity.setIsPay("1".toCharArray()[0]);
+        orderPayRefundEntity.setEntity(orderEntity);
+        orderPayRefundEntity.setCode(orderEntity.getCode());
+        orderPayRefundEntity.setAccountNumber(accountName);
+
+        orderPayRefundEntity.setAmount(orderEntity.getTotalAmount());
+        orderPayRefundEntity.setPayTime(new Date());
+        orderPayRefundEntity.setPayMethod(orderEntity.getPayMethod());
+        orderPayRefundEntity.setPayStatus(orderEntity.getPaymentStatus());
+        orderPayRefundEntity.setCommerce(commerce);
+
+        //收款账户
+        logger.info("account is  "+account);
+        logger.info("serialNumber is  "+serialNumber);
+        orderPayRefundEntity.setAccountNumber(account);
+        orderPayRefundEntity.setSerialNumber(serialNumber);//银行流水号
+        orderPayRefundDao.save(orderPayRefundEntity);
+        logger.info("保存收款信息...........................");
+    }
+
+    /**
+     *
+     * purpose: 校验并 回调 <br>
+     * step: <br>
+     * @param orderNo  平台Id
+     * @param payAmount 支付金额
+     * @throws Exception
+     */
+    @Transactional
+    public void updateOrderPayment(String accountName,String orderNo, String payAmount,String account ,String serialNumber) throws Exception {
+        //根据订单ID获取订单对象
+       /* //ChannelOrder orderInfo = orderService.getChannelByOrderId(orderNo);
+        Order orderEntity = orderDao.findByCode(orderNo);
+
+        if (orderEntity == null) {
+            throw new Exception("此["+orderNo+"]订单不存在");
+        }
+
+        String orderId = orderEntity.getCode();
+        double totalAcount = orderEntity.getTotal();
+        // 检查返回金额
+        boolean b = checkPayReturnAmountForMobileAppCCB(orderId, payAmount, totalAcount);
+
+        if (!b) {
+            throw new Exception("通知支付结果对应订单的金额不一致：订单号[" + orderId + "],通知金额：" + payAmount+ ",订单金额：" + totalAcount*100);
+        }
+
+        //修改订单支付状态 1-未支付；2-已支付；3-已退款
+
+        updateOrderPaymentStatus(orderId);
+
+        logger.info("修改支付状态...........................");
+
+
+        //保存收款信息
+        OrderPayRefundEntity orderPayRefundEntity = new OrderPayRefundEntity();
+        orderPayRefundEntity.setId(sequenceDao.getOrderRefundEntityId());
+
+        orderPayRefundEntity.setIsPay("1".toCharArray()[0]);
+
+        orderPayRefundEntity.setOrder(orderEntity);
+        orderPayRefundEntity.setOrderNumber(orderEntity.getCode());
+        orderPayRefundEntity.setAccountNumber(accountName);
+
+        orderPayRefundEntity.setAmount(new Double((Arith.mul(orderEntity.getTotal(),100))).longValue());
+        orderPayRefundEntity.setPayTime(new Date());
+        orderPayRefundEntity.setPayMethod(orderEntity.getPayment().getId());
+        orderPayRefundEntity.setPayStatus(orderEntity.getPaymentStatus());
+
+        //收款账户
+        logger.info("account is  "+account);
+        logger.info("serialNumber is  "+serialNumber);
+        orderPayRefundEntity.setAccountNumber(account);
+        orderPayRefundEntity.setSerialNumber(serialNumber);//银行流水号
+        orderPayRefundDao.save(orderPayRefundEntity);
+        logger.info("保存收款信息...........................");*/
+    }
+
+    /**
+     * update order ship status
+     * @param orderId
+     */
+
+    @Transactional
+    public void updateOrderPaymentStatus(String orderId){
+
+        logger.info(" process in update payment status start,and order id is =="+orderId);
+        Order order = orderDao.findByCode(orderId);
+        //1-未支付，2-已支付，3-已退款
+        logger.info("id is :"+order.getCode());
+        order.setPaymentStatus(new Integer(2));
+        /*Updater<Order> updater = new Updater<Order>(order);
+        updater.include("paymentStatus");
+        Order updated = orderDao.updateByUpdater(updater);*/
+        terminalOrderDao.updateOrder(order);
+
+        logger.info(" process in u payment status end ");
+    }
+
+    @Transactional
+    public void updateNewOrderPaymentStatus(String orderId){
+
+        logger.info(" process in update payment status start,and new order id is =="+orderId);
+        OrderEntity order = orderEntityService.findOrderEntityByOrderId(orderId);
+        //1-未支付，2-已支付，3-已退款
+        logger.info("order id is :"+order.getCode());
+        order.setPaymentStatus(PaymentStatusEnum.PaySucceeded);
+        orderEntityService.updateOrderEntity(order);
+
+        logger.info(" process in u payment status end ");
+    }
+
+
+
+    /**
+     * update order ship status
+     * @param orderId
+     */
+
+    @Transactional
+    public void updateOrderShipmentStatus(String orderId){
+
+        logger.info(" process in updateOrderShipmentSuccess start for new order......");
+        //Order order = orderDao.findByCode(orderId);
+        OrderEntity order = orderEntityService.findOrderEntityByOrderId(orderId);
+        //1-未发货，2-已发货，3-已退货
+        order.setShipmentStatus(ShipmentStatusEnum.Delivery);
+        orderEntityService.updateOrderEntity(order);
+       try {
+           threadPoolService.execute(() -> {
+               String terminalId = order.getTerminalId();
+               Long productId = null;
+               int productCount = 0;
+               List<OrderProduct> orderProductList = orderProductService.getOrderProductByOrderId(order.getCode());
+               Integer productStamp = orderProductList.get(0).getProduct().getProductStamp();
+               if (productStamp == 1) {
+                   for (OrderProduct orderProduct : orderProductList) {
+                       productId = orderProduct.getProduct().getId();
+                       productCount = productCount + orderProduct.getProductQty();
+                   }
+                   alterTerminalStockService.alterStock(terminalId, productId, productCount);
+               }
+           });
+       }catch (Exception e){
+           logger.info("修改终端库存异常",e);
+       }
+
+        logger.info(" process in updateShipmentOrderSuccess end for new Order......");
+    }
+
+    //金额以分为单位
+    private boolean checkPayReturnAmountForMobileAppCCB(String orderId, String returnAmout,Double dbAmout) {
+        int i = 1;
+        double dbAmounts=dbAmout== null ? 0 : Double.parseDouble(dbAmout.toString());
+        i = Arith.compareTo(Double.parseDouble(returnAmout), dbAmounts);
+
+        if (i != 0) {
+            logger.info("通知支付结果对应订单的金额不一致：订单号" + orderId + ",通知金额：" + returnAmout+ ",订单金额：" + dbAmout);
+            return false;
+        }
+        return true;
+    }
+}

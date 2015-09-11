@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>修改订单</title>
+<#include "/jspgou_sys/head.html"/>
+<script src="${base}/res/common/js/pony.tree.js" type="text/javascript"></script>
+<link href="${base}/res/jspgou/css/product.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript">
+$(function() {
+	$("#jvForm").validate();
+});
+function changeCount(){
+	var totalWeight=0.0;
+	$("#[id^='itemCount_']").each(function(){
+		var ss=parseFloat(jQuery(this).val());
+		var h=jQuery(this).attr("id");
+		var index=h.split("_")[1];
+		var weight=$("#itemWeight_"+index).html();
+		totalWeight+=ss*weight;
+	});
+	ajaxtotalDeliveryFee($("#shippingId").val(),totalWeight);
+	setTimeout(function(){changePrice()},1000);
+}
+
+function changePrice(){
+	var totalPrice=0.0;
+	$("#[id^='itemPrice_']").each(function(){
+		var ss=parseFloat(jQuery(this).val());
+		var h=jQuery(this).attr("id");
+		var index=h.split("_")[1];
+		var count=$("#itemCount_"+index).val();
+		$("#subtotal_"+index).html("");
+		$("#subtotal_"+index).html(count*ss);
+		totalPrice+=count*ss;
+	});
+	$("#productPrice").html("");
+	$("#productPrice").html(totalPrice);
+	$("#total").html("");
+	$("#total").html(parseFloat($("#freight").val())+totalPrice);
+	$("#totalPice").val(parseFloat($("#freight").val())+totalPrice);
+}
+
+function changeFreight(){
+	var ss=parseFloat($("#productPrice").html());
+	$("#total").html("");
+	ss+=parseFloat($("#freight").val());
+	$("#total").html(ss);
+}
+
+function ajaxtotalDeliveryFee(d,w){
+	$.post("../order/ajaxtotalDeliveryFee.do", {
+		'deliveryMethod':d,
+		'weight':w
+	}, function(data) {
+		if(data.status==1){
+			$("#freight").val(data.freight);
+			return data.freight;
+		}
+	},'json');
+}
+
+function statusChange(status){
+	if(status==19){
+      $("#jvForm").attr("action","o_returnMoney.do");
+	}
+	$("#status").val(status);
+}
+
+    function agreeToRefund(id){
+        if(confirm("确认退款")){
+            window.location.href = "o_refund.do?code="+id;
+        }
+    }
+
+	function resendVoucher(orderId){
+		if(confirm("确认发送凭证")){
+			window.location.href = "o_resend.do?orderId="+orderId;
+		}
+	}
+
+
+	window.onload = function (){
+		setTimeout("hideMsg()",2000);
+	}
+
+function hideMsg(){
+	document.getElementById('msg').style.display='none'; //这个是操作DIV消失的命令
+}
+</script>
+<style type="text/css">
+.addr{padding:2px 0;}
+.title{font-size:14px;}
+</style>
+</head>
+<body>
+<div class="body-box">
+<div class="rhead">
+	<div class="rpos"><@s.m "global.position"/>:  <@s.m "order.function"/> - 查看</div>
+	<form class="ropt">
+		<input type="button" value="<@s.m "global.backToList"/>" onclick="history.back();"/>
+	</form>
+	<div class="clear"></div>
+</div>
+	<form id="jvForm" method="post" style="padding-top:5px">
+		<input type="hidden" name="code" value="${order.code!}"/>
+		<input type="submit" value="确认" onclick="this.form.action='o_affirm.do'" <#if order.status!='NotConfirm'>disabled<#elseif order.paymentStatus=='NotPay'>disabled</#if>/>
+		<!--<input type="submit" value="支付" onclick="this.form.action='v_payment.do'" <#if order.paymentStatus!='NotPay'>disabled<#elseif order.status=='Cancelled'>disabled</#if>/>
+		<input type="submit" value="发货" onclick="this.form.action='v_shipments.do'" <#if order.shipmentStatus!='NotShip'>disabled<#elseif order.status=='Cancelled'>disabled<#elseif order.status!='Confirmed'>disabled<#if order.paymentStatus!='PaySucceeded'>disabled</#if></#if>/>-->
+		<input type="submit" value="完成" onclick="this.form.action='o_accomplish.do'" <#if order.shipmentStatus!='Shipped'>disabled<#elseif order.paymentStatus!='PaySucceeded'>disabled<#elseif order.status!='Confirmed'>disabled</#if>/>
+		<input type="submit" value="取消"  onclick="this.form.action='o_abolish.do'" <#if order.status=='Cancelled'>disabled<#elseif order.shipmentStatus=='Shipped'>disabled<#elseif order.paymentStatus=='PaySucceeded'>disabled<#elseif order.status=='Finished'>disabled</#if>/>
+		<input type="button" value="退款"  onclick="agreeToRefund('${order.code!}');" <#if order.status=='Cancelled'>disabled<#elseif order.shipmentStatus=='Shipped'>disabled<#elseif orderVoucher??&&orderVoucher.status=='Used'>disabled<#elseif order.paymentStatus=='NotPay'>disabled<#elseif order.paymentStatus=='RefundSucceeded'>disabled<#elseif order.status=='Finished'>disabled</#if>/>
+		<#if order.phone??>
+			<#if op.productStamp ==3 || op.productStamp ==2>
+			<input type="button" value="重发凭证"  onclick="resendVoucher('${order.code!}');" <#if order.status=='Cancelled'>disabled<#elseif order.shipmentStatus=='Shipped'>disabled<#elseif order.paymentStatus=='NotPay'>disabled<#elseif order.paymentStatus=='RefundSucceeded'>disabled<#elseif order.status=='Finished'>disabled</#if>/>
+			</#if>
+		</#if>
+		<span id="msg" style="color:red">${msg!}</span>
+	</form>
+	<@p.form id="jvForm" action="o_update.do" labelWidth="12">
+	<@p.td colspan="2"><strong class="title"><@s.m "order.product"/></strong></@p.td><@p.tr/>
+<@p.td colspan="2">
+<@p.table value=orderProduct;item,i,has_next><#rt/>
+<@p.column code="商品ID" style="width:100px"><#if item.product??>${item.product.id!}</#if></@p.column><#t/>
+<@p.column code="product.name" align="left">${item.productName!}</@p.column><#t/>
+<@p.column code="orderItem.finalPrice" style="width:110px">￥${(item.productPrice/100)?string("0.00")!}</@p.column><#t/>
+
+<@p.column code="orderItem.count" style="width:60px">${item.productQty!}</@p.column><#t/>
+<@p.column code="orderItem.subtotal" style="width:100px"><span id="subtotal_${item.id}">￥${(item.productPrice*item.productQty/100)?string("0.00")}</span>
+</@p.column><#t/>
+</@p.table>
+</@p.td><@p.tr/>
+
+<@p.td colspan="2"><strong class="title"><@s.m "order.info"/></strong></@p.td><@p.tr/>
+<@p.td colspan="1" width="50" label="订单编号">${order.code!}</@p.td>
+<@p.td colspan="1" width="50" label="order.createTime">${order.createTime!}</@p.td>
+<@p.tr/>
+
+<@p.td colspan="1" width="50" label="order.status">
+${order.status.displayName}
+</@p.td>
+<@p.td colspan="1" width="50" label="order.paymentStatus">
+${order.paymentStatus.displayName}
+</@p.td>
+<@p.tr/>
+
+<@p.td colspan="1" width="50" label="手机号码">${order.phone!}</@p.td>
+<@p.td colspan="1" width="50" label="流水"><#if order.serialNo!='null'>${order.serialNo!}</#if></@p.td>
+<@p.tr/>
+
+
+
+<@p.td colspan="1" width="50" label="order.shippingStatus">
+${order.shipmentStatus.displayName}
+</@p.td>
+
+<@p.td colspan="1" width="50" label="终端号">${order.terminalId!}</@p.td><@p.tr/>
+<@p.td colspan="1" width="50" label="order.total">￥<span id="total">${(order.totalAmount/100)?string("0.00")}</span></@p.td>
+<@p.td colspan="1" width="50" label="order.payment">${order.payMethod.displayName}</@p.td><@p.tr/>
+<@p.td colspan="1" width="50" label="成本价">￥${(order.originalPrice/100)?string("0.00")}</@p.td>
+<@p.td colspan="1" width="50" label="差价">￥${(order.diffPrice/100)?string("0.00")}</@p.td>
+<@p.tr/>
+<@p.td colspan="1" width="50" label="收款账号">${order.payAccountName!}</@p.td>
+<@p.td colspan="1" width="50" label="设备标识">${order.deviceName!}</@p.td>
+<@p.tr/>
+
+<#if orderPostInfo?exists >
+<@p.td colspan="2"><strong class="title">收货人信息</strong></@p.td><@p.tr/>
+<@p.td colspan="1" width="50" label="收货人姓名">${orderPostInfo.receiveName!}</@p.td>
+<@p.td colspan="1" width="50" label="收货人固定电话">${orderPostInfo.receivePhone!}</@p.td><@p.tr/>
+<@p.td colspan="2" label="收货人地址">${orderPostInfo.receiveAddress!}</@p.td><@p.tr/>
+</#if>
+
+<#if orderPayRefund?exists >
+<@p.td colspan="2"><strong class="title">付款信息</strong></@p.td><@p.tr/>
+<@p.td colspan="1" width="50" label="付款人">${orderPayRefund.accountName!}</@p.td>
+<@p.td colspan="1" width="50" label="流水号">${orderPayRefund.serialNumber!}</@p.td><@p.tr/>
+<@p.td colspan="1" width="50" label="付款时间">${orderPayRefund.payTime?string("yyyy-MM-dd HH:mm:ss")}</@p.td>
+<@p.td colspan="1" width="50" label="支付账号">${orderPayRefund.accountNumber!}</@p.td><@p.tr/>
+<@p.td colspan="1" width="50" label="状态">${orderPayRefund.payStatus.displayName!}</@p.td>
+<@p.td colspan="1" width="50" label=""></@p.td><@p.tr/>
+</#if>
+
+</@p.form>
+
+
+
+</div>
+</body>
+</html>

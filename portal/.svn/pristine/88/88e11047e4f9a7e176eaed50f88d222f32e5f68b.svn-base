@@ -1,0 +1,172 @@
+package com.ifunpay.portal.service.payment;
+
+import com.ifunpay.portal.ProjectXml;
+import com.ifunpay.portal.entity.BankPayInfo;
+import com.ifunpay.portal.enums.PaymentStatusEnum;
+import com.ifunpay.portal.model.BankAppEnum;
+import com.ifunpay.portal.model.PaidInfo;
+import com.ifunpay.portal.model.cmbc.MBECShopSecurity;
+import com.ifunpay.portal.model.payment.BankPaymentManager;
+import com.ifunpay.portal.model.payment.RefundResult;
+import com.ifunpay.util.network.HttpStatusClient;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+
+/**
+ * Created by Yu on 2015/3/4.
+ */
+@Component
+public class CmbcBankPaymentManager implements BankPaymentManager {
+
+    private Logger logger = Logger.getLogger(CmbcBankPaymentManager.class);
+
+    public void pay(ModelAndView modelAndView, HttpServletRequest request, String orderId, BankPayInfo bankPayInfo, String amountStr) {
+        MBECShopSecurity mBECShopSecurity = new MBECShopSecurity();
+        String corpId = ProjectXml.getValue("cmbc_corpId");//商户id
+        String payerCurr = ProjectXml.getValue("cmbc_payerCurr");//支付币种
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat sf = new SimpleDateFormat("yyyyMMdd");
+        SimpleDateFormat sf1 = new SimpleDateFormat("HHmmss");
+        String txDate = sf.format(c.getTime());//支付日期
+        String txTime = sf1.format(c.getTime());//支付时间
+        String billNo = corpId + orderId; //根据商户id+订单id生成支付单号
+        String corpName = ProjectXml.getValue("cmbc_corpName");//商户名称
+        String Billremark1 = "test";//备注1
+        String Billremark2 = "test";//备注2
+        String CorpRetType = ProjectXml.getValue("cmbc_corpRetType");//是否实时返回支付结果
+        String retUrl = ProjectXml.getValue("cmbc_retUrl");
+        String langMAC = "sadf";//MAC
+
+        StringBuffer sbf = new StringBuffer();
+        sbf.append(billNo).append("|").append(amountStr).append("|").append(payerCurr).append("|").append(txDate).append("|").append(txTime).append("|").append(corpId)
+                .append("|").append(corpName).append("|").append(Billremark1).append("|").append(Billremark2).append("|").append(CorpRetType).append("|").append(retUrl).append("|").append(langMAC);
+
+        logger.info("orderInfo:" + sbf.toString());
+
+        String orderInfo = mBECShopSecurity.encryptOrder(sbf.toString());
+        modelAndView.addObject("orderInfo", orderInfo);
+        modelAndView.addObject("login", 1);
+
+        String ctx = request.getSession().getServletContext().getContextPath();
+        modelAndView.addObject("ctx", ctx);
+
+        modelAndView.setViewName("payment/CmbcMobilePay");
+    }
+
+
+    public void paidCallback(HttpServletRequest request, PaidInfo paidInfo) {
+
+        String payresult = request.getParameter("payresult");
+        if (payresult != null) {
+            try {
+                logger.info("CMBC 支付回调解密前参数" + payresult);
+                MBECShopSecurity mBECShopSecurity = new MBECShopSecurity();
+                String resultParam = mBECShopSecurity.decryptTradeResult(payresult);
+                logger.info("CMBC 支付回调参数" + resultParam);
+                String[] res = resultParam.split("\\|");
+                String billNo = res[0];
+                String orderId = billNo.substring(5);
+                String corpID = res[1];
+                String txAmt = res[2];
+                String txDate = res[3];
+                String txTime = res[4];
+                String billstatus = res[5];
+                String Billremark1 = res[6];
+                String Billremark2 = res[7];
+                paidInfo.setAccount("");
+                paidInfo.setUserName("");
+                paidInfo.setSerialNumber(billNo);
+                paidInfo.setBranchId("");
+                long amount = 0l;
+                try {
+                    double d = new Double(txAmt) * 100;
+                    amount = Math.round(d);
+                } catch (RuntimeException e) {
+                    logger.info("CMBC MOBILE CALLBACK unknown PAYMENT is not a number but [" + txAmt + "]");
+                }
+                paidInfo.setAmount(amount);
+                paidInfo.setStatus(PaymentStatusEnum.PaySucceeded);
+                paidInfo.setBank(BankAppEnum.CMBC);
+                paidInfo.setOrderId(orderId);
+                paidInfo.setPosId("");
+                paidInfo.setModelAndView(new ModelAndView());
+
+                logger.info("CMBC 支付回调参数" + resultParam);
+            } catch (Exception e) {
+                logger.info("支付失败回调", e);
+
+            }
+
+        } else {
+            logger.info("返回参数为空");
+        }
+    }
+
+    @Override
+    public boolean isRefundable() {
+        return true;
+    }
+
+    @Override
+    public RefundResult refund(String orderId, int amount, String refundId) {
+        RefundResult result = new RefundResult();
+        result.setOrderId(orderId);
+        result.setRefundId(refundId);
+        if (!"".equals(orderId)) {
+            String dealNo = ProjectXml.getValue("cmbc_dealNo");//请求交易码
+            String corpId = ProjectXml.getValue("cmbc_corpId");//商户编号
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+            String time = formatter.format(new Date());//退款时间
+            String billNo = corpId + orderId;//订单编号
+            String refundNo = corpId + refundId;//退款编号
+            double yuan = amount / 100.0;
+            String amounts = new DecimalFormat("#0.00").format(yuan);
+            String amountStr = amounts;//退款金额
+            String remark = "test";//备注
+            String url = "";//退款情况通知
+            StringBuffer sbf = new StringBuffer();
+            sbf.append(dealNo).append("|").append(corpId).append("|").append(time).append("|").append(billNo).append("|").append(refundNo).append("|").append(amountStr)
+                    .append("|").append(remark).append("|").append(url);
+            logger.info("orderInfo:" + sbf.toString());
+            MBECShopSecurity mBECShopSecurity = new MBECShopSecurity();
+            String orderInfo = mBECShopSecurity.encryptOrder(sbf.toString());
+            HttpStatusClient httpStatusClient = new HttpStatusClient();
+            httpStatusClient.addParam("cryptograph", orderInfo);
+            try {
+                String re = httpStatusClient.doPost(ProjectXml.getValue("cmbc_refund_url"));
+                logger.info("响应参数" + re.substring(12));
+                try {
+                    String resultParam = mBECShopSecurity.decryptTradeResult(re.substring(12));
+                    String[] res = resultParam.split("\\|");
+                    String refundStatus = res[5]; // refundStatus 为 00：表示退款成功 01：失败； 05：退款中。
+                    int state = new Integer(refundStatus);
+                    if(state == 5){
+                        state = 2;
+                    }
+                    result.setStatus(state);
+                } catch (Exception e) {
+                    logger.info("Decrypt error, " + e);
+                }
+            } catch (IOException | RuntimeException e) {
+                logger.error("", e);
+
+            }
+        }
+        return result;
+    }
+
+
+    @Override
+    public BankAppEnum getBankApp() {
+        return BankAppEnum.CMBC;
+    }
+}

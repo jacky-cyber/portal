@@ -1,0 +1,30 @@
+package com.jspgou.cms.manager;
+
+import java.util.List;
+
+import com.ifunpay.portal.entity.OrderPayRefundEntity;
+import com.jspgou.common.page.Pagination;
+import com.jspgou.cms.entity.Gathering;
+/**
+* This class should preserve.
+* @preserve
+*/
+public interface GatheringMng {
+	public Pagination getPage(String accountNumber,String code,int pageNo, int pageSize);
+
+	public List<OrderPayRefundEntity> getAllPayRefundToExcel(String accountNumber,String code);
+	
+	public List<Gathering> getlist(Long orderId);
+	
+	public void deleteByorderId(Long orderId);
+
+	public Gathering findById(Long id);
+
+	public Gathering save(Gathering bean);
+
+	public Gathering update(Gathering bean);
+
+	public Gathering deleteById(Long id);
+	
+	public Gathering[] deleteByIds(Long[] ids);
+}

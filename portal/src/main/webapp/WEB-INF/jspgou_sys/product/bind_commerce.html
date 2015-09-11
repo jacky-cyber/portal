@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+        function position(commerceId) {
+//            onchange="position(this[selectedIndex].value);"
+            if(""!=commerceId) {
+                if (confirm("确定绑定该商家？")) {
+                    $.ajax({
+                        url: "v_bind_commerce_save.do",
+                        type: "GET",
+                        data: {"productId": '${productId}', "commerceId": "","ctgId":'${ctgId}',"pageNo":""}
+//                        success: function (data) {
+//                            if (data) {
+//                                alert("绑定商家成功");
+//                            }
+//                        }
+                    });
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="body-box">
+    <form action="v_bind_commerce_save.do">
+    <div class="rhead">
+        <div class="rpos">
+            <select name="commerceId" id="commerceId" class="required" >
+                <option value="">---- 请选择 ----</option>
+                <#list commerces as commerce >
+                    <option value="${commerce.commerceId}">${commerce.name}</option>
+                </#list>
+            </select>
+                <input name="productId" value="${productId}" style="display:none;"/>
+                <input name="ctgId" value="${ctgId}" style="display:none;"/>
+                <input name="pageNo" value="" style="display:none;"/>
+        </div>
+
+
+
+
+        <div class="clear"></div>
+    </div>
+    <div >
+
+            <input type="submit"   value="保存"  />
+
+
+    </div>
+    </form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+</html>

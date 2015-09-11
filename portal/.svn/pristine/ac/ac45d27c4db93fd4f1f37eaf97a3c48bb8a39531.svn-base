@@ -1,0 +1,105 @@
+/* Form styles */
+.form-container {
+	margin: 10px;
+	background-color: #FFF;
+}
+
+.form-container form span {
+	margin: 0;
+}
+
+.form-container form span.note {
+	margin-left: 10px;
+	font-size: 90%;
+	color: #aaa;
+}
+
+.form-container form fieldset {
+	margin: 10px 0;
+	padding: 10px;
+	border: #D4F1FD 1px solid;
+}
+
+.form-container form legend {
+	font-weight: bold;
+	color: #666;
+}
+
+.form-container form fieldset div {
+	padding: 0.25em 0;
+ 
+}
+
+.form-container label,.form-container span.label {
+	margin-right: 10px;
+	padding-right: 10px;
+	width: 150px;
+	display: block;
+	float: left;
+	text-align: right;
+	position: relative;
+}
+
+.form-container form fieldset p{
+  float:left;
+  width:80%;
+}
+
+.form-container label.error,.form-container span.error {
+	color: #C00;
+}
+
+.form-container label em,.form-container span.label em {
+	position: absolute;
+	right: 0;
+	font-size: 120%;
+	font-style: normal;
+	color: #C00;
+}
+
+.form-container input {
+	border: solid 1px #b5d6e6;
+	padding: 2px;
+}
+
+.form-container input.error {
+	border-color: #C00;
+	background-color: #FEF;
+	border-width: 1px;
+}
+
+.form-container textarea {
+	border: solid 1px #b5d6e6;
+	padding: 5px;
+	font-size: 12px;
+}
+
+.form-container .controlset ul li {
+	margin-left: 170px;
+	margin-bottom: 5px;
+}
+
+.form-container .controlset label {
+	display: inline;
+	float: none;
+	border: 0;
+}
+
+.form-container .buttonrow {
+	margin-left: 180px;
+	padding-bottom: 10px;
+}
+
+.form-container .submitbtn {
+	color: #666;
+	font-size: 14px;
+	font-weight: bold;
+	width: 64px;
+	height: 27px;
+	background: url(../images/submitbtn_bg.gif) no-repeat;
+	border: 0;
+}
+
+.bank_one{}
+.bank_one input{ margin-right:5px;}
+.one{ float:left; margin-right:10px;}

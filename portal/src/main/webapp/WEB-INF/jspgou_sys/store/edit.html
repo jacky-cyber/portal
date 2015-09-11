@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+        $(function() {
+            $("#storeUpdateForm").validate();
+        });
+    </script>
+    <style type="text/css">
+        .params{padding-top:5px;}
+    </style>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>:  <@s.m "store.function"/> - <@s.m "global.edit"/></div>
+        <form class="ropt">
+            <input type="submit" value="<@s.m "global.backToList"/>" onclick="this.form.action='v_list.do';"/>
+        </form>
+        <div class="clear"></div>
+    </div>
+    <#assign errorStoreExist><@s.m "error.storeNameExist"/></#assign>
+    <@p.form id="storeUpdateForm" name="storeUpdateForm" action="o_update_save.do">
+    <input type="hidden" name="id" value ="${store.id}" />
+    <@p.text label="店面名称" name="storeName" value="${store.storeName!}" required="true" class="required" vld="{required:true,rangelength:[3,100],remote:'v_check_store_name.do?id=${store.id}',messages:{remote:'${errorStoreExist}'}}"/>
+    <@p.select  label="所属商户"  name="commerceId" value="${store.commerceId!}" required="true" list=commerces listKey="id" listValue="name" />
+    <@p.text label="联系电话" name="mobile" value="${store.mobile!}" required="true" class="required" maxlength="100"/>
+
+    <@p.select  label="状态"  name="storeStatus" value="${store.storeStatus!}" required="true" list={"1":"启用","2":"禁用"} />
+    <@p.text label="电子邮箱" name="email" value="${store.email!}" maxlength="100"/>
+    <@p.text label="描述" name="description" value="${store.description!}" maxlength="100"/>
+
+    <tr>
+        <td width="20%" class="pn-flabel pn-flabel-h">
+            地址:
+        </td>
+        <td width="80%" class="pn-fcontent">
+            <select onchange="initcity();" name="province" id="pro">
+                <SCRIPT>creatprovince();</SCRIPT>
+            </select>
+            <select name="city" class="inp_text" id="city">
+                <option value="">选择城市</option>
+            </select>
+            详细地址:<input type="text" name="detail"/>
+        </td>
+    </tr>
+    <@p.td>
+
+    <input type="hidden" name="category" value="1"/>
+    <@p.submit code="global.submit"/> &nbsp; <@p.reset code="global.reset"/>
+</@p.td>
+
+</@p.form>
+</div>
+</body>
+</html>

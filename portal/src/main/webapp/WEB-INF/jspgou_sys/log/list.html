@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title></title>
+<#include "/jspgou_sys/head.html"/>
+<script type="text/javascript">
+function getTableForm() {
+	return document.getElementById('tableForm');
+}
+function optDelete() {
+	if(Pn.checkedCount('ids')<=0) {
+		alert("<@s.m 'error.checkRecord'/>");
+		return;
+	}
+	if(!confirm("<@s.m 'global.confirm.delete'/>")) {
+		return;
+	}
+	var f = getTableForm();
+	f.action="o_delete.do";
+	f.submit();
+}
+</script>
+</head>
+<body>
+<div class="body-box">
+<div class="rhead">
+	<div class="rpos"><@s.m "global.position"/>: 更新日志 - <@s.m "global.list"/></div>
+	<div class="clear"></div>
+</div>
+	<div class="rhead">
+		<form id="searchModel" action="./v_list.do">
+			<div style="padding-top:5px">
+				<input type="hidden" name="pageNo"/>
+				日期：<input type="text" name="startTime" value="${startTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})" style="width:100px"/>&nbsp;至&nbsp;<input type="text" name="endTime" value="${endTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})" style="width:100px"/>
+				用户名：<input type="text" name="userId" value="${userId!}"/>
+				模块ID：<input type="text" name="moduleId" value="${moduleId!}"/>
+				关联ID：<input type="text" name="relateId" value="${relateId!}"/>
+				<input type="submit" value="<@s.m "global.query"/>" />
+			</div>
+		</form>
+		<div class="clear"></div>
+	</div>
+<form id="tableForm" method="post">
+<input type="hidden" name="pageNo" value="${pageNo!}"/>
+<@p.table value=pagination;log,i,has_next><#rt/>
+	<@p.column title="<input type='checkbox' onclick='Pn.checkbox(\"ids\",this.checked)'/>" width="20">
+		<input type='checkbox' name='ids' value='${log.id}'/><#t/>
+	</@p.column><#t/>
+	<@p.column title="编号">${log.id!}</@p.column><#t/>
+	<@p.column code="用户名">${log.userId!}</@p.column><#t/>
+	<@p.column code="模块">${log.moduleName.displayName!}</@p.column><#t/>
+	<@p.column code="时间">${log.operateTime!}</@p.column><#t/>
+	<@p.column code="内容">
+[${log.userId!}] 于  ${log.operateTime!}
+操作[${log.moduleName.displayName!}]模块，
+${log.moduleName.displayName!}ID：${log.moduleId!}
+; [${log.operationName}]  ${log.relativeType.displayName!}ID:  ${log.relateId!}
+	</@p.column><#t/>
+</@p.table>
+<div><input type="button" value="<@s.m "global.delete"/>" onclick="optDelete();"/></div>
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+<script type="text/javascript">
+	function _gotoPage(pageNo) {
+		var tableForm = document.getElementById('searchModel');
+		$("input[name=pageNo]").val(pageNo);
+		tableForm.action="v_list.do";
+		tableForm.submit();
+	}
+</script>
+</html>

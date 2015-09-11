@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+        //将form转为AJAX提交
+        function ajaxSubmit(frm, fn) {
+            var dataPara = getFormJson(frm);
+            $.ajax({
+                url: frm.action,
+                type: frm.method,
+                data: dataPara,
+                success: fn
+            });
+        }
+
+        //将form中的值转换为键值对。
+        function getFormJson(frm) {
+            var o = {};
+            var a = $(frm).serializeArray();
+            $.each(a, function () {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+
+            return o;
+        }
+
+        $(function() {
+            $("#jvForm").validate();
+            /* $("#jvForm").bind('submit',function(){
+             ajaxSubmit(this, function(data){
+
+             if("success" == data) {
+             alert("添加成功");
+             window.location.href = "v_list.do";
+             }else{
+             alert("添加失败");
+             }
+             });
+             return false;
+             });*/
+        });
+    </script>
+    <style type="text/css">
+        .params{padding-top:5px;}
+    </style>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>:  渠道 - <@s.m "global.add"/></div>
+        <form class="ropt">
+            <input type="submit" value="<@s.m "global.backToList"/>" onclick="this.form.action='v_list.do';"/>
+        </form>
+        <div class="clear"></div>
+    </div>
+    <#assign errorUserExist><@s.m "error.channelNameExist"/></#assign>
+    <@p.form id="jvForm" action="import_channel_save.do" method="post" enctype="multipart/form-data">
+    <@p.select  label="上级渠道"  name="chanParentId.id" required="true" list=channelList listKey="id" listValue="channelName" />
+    <@p.select  label="状态"  name="status" required="true" list={"1":"启用","2":"禁用"} />
+    <@p.select  label="收款帐号"  name="bankPayInfoId" required="true" list=bankPayInfoList listKey="id" listValue="name" />
+    <tr>
+        <td width="20%" class="pn-flabel pn-flabel-h">
+            选择要导入的Excel:
+        </td>
+        <td width="80%" class="pn-fcontent">
+            <input type="file" id="file" name="file" size="20"/>
+        </td>
+    </tr>
+    <@p.td>
+    <input type="hidden" name="category" value="1"/>
+    <@p.submit code="global.submit"/> &nbsp; <@p.reset code="global.reset"/>
+</@p.td>
+</@p.form>
+</div>
+</body>
+</html>

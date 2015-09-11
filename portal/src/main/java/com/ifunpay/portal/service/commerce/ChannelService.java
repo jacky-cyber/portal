@@ -1,0 +1,139 @@
+package com.ifunpay.portal.service.commerce;
+
+import com.ifunpay.portal.dao.ChannelDao;
+import com.ifunpay.portal.entity.BankPayInfo;
+import com.ifunpay.portal.entity.Channel;
+import com.ifunpay.portal.service.log.OperationLogService;
+import com.jspgou.cms.dao.SequenceDao;
+import com.jspgou.common.page.Pagination;
+import com.jspgou.common.util.ExcelReader;
+import com.jspgou.common.web.session.SessionProvider;
+import com.jspgou.core.entity.Admin;
+import com.jspgou.core.manager.AdminMng;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * Created by Cong Long Xie on 2015/4/21.
+ */
+@Service
+public class ChannelService {
+
+    private static Logger logger = Logger.getLogger(CommerceService.class);
+
+    @Resource
+    private ChannelDao channelDao;
+    @Resource
+    private SequenceDao sequenceDao;
+    @Resource
+    private SessionProvider session;
+    @Resource
+    private OperationLogService operationLogService;
+    @Resource
+    private AdminMng adminMng;
+
+    @Transactional
+    public Pagination getPaginationForChannelService(Long channelId,String channelName, Date startTime, Date endTime, int pageNo,int pageSize){
+        return  channelDao.getPageForChannel(channelId, channelName, startTime, endTime, pageNo, pageSize);
+    }
+
+
+    @Transactional
+    public List<Channel> getAllChannel(){
+        return channelDao.getAllChannel();
+    }
+
+    @Transactional
+    public List<BankPayInfo> getAllBankPayInfo(){
+        return channelDao.getAllBankPayInfo();
+    }
+    @Transactional
+    public void saveChannel(Channel channel){
+        channelDao.saveChannel(channel);
+    }
+
+    @Transactional
+    public Channel[] deleteByIds(String[] ids) {
+        Channel[] beans = new Channel[ids.length];
+        for (int i = 0, len = ids.length; i < len; i++) {
+            beans[i] = deleteById(ids[i]);
+        }
+        return beans;
+    }
+
+    public Channel deleteById(String id) {
+        Channel bean = channelDao.deleteById(Long.parseLong(id));
+        return bean;
+    }
+
+    public List<Channel> getChannelExceptNull(){
+        return channelDao.getChannelExceptNull();
+    }
+
+    @Transactional
+    public Channel getChannelByChannelId(long channelId){
+        return channelDao.getChannelById(channelId);
+    }
+
+
+    @Transactional
+    public Channel getChannelByChannelName(String channelName){
+        return channelDao.getChannelByName(channelName);
+    }
+
+    public List<Channel> getChannel(String channelName){
+        return channelDao.getChannel(channelName);
+    }
+
+    public List<Channel> getChannelToExcel(String channelName, Long channelId,String startTime,String endTime){
+        return channelDao.getChannelToExcel(channelName, channelId,startTime,endTime);
+    }
+
+    @Transactional
+    public void saveChannelFromFile(MultipartFile file, Channel bean,HttpServletRequest request) {
+        String chanId = "";
+        ExcelReader excelReader = new ExcelReader(file);
+        List<String[]> arr = excelReader.getAllData(0);
+        for (int i=1; i<arr.size(); i++){
+            if (StringUtils.isBlank(arr.get(i)[1])){
+                continue;
+            }
+            Channel channel = new Channel();
+            try {
+                channel.setChannelId(sequenceDao.getChannelId());
+                channel.setCreateDate(new Date());
+                channel.setChannelName(arr.get(i)[1]);
+                channel.setStatus(bean.getStatus());
+                channel.setCollaborateStartTime(bean.getCollaborateStartTime());
+                channel.setCollaborateEndTime(bean.getCollaborateEndTime());
+                channel.setBankPayInfoId(bean.getBankPayInfoId());
+
+                Channel parChannel = getChannelByChannelId(bean.getChanParentId().getId());
+                if (parChannel != null) {
+                    channel.setChanParentId(parChannel);
+                }
+                saveChannel(channel);
+                if(i==1){
+                    chanId +=channel.getChannelId()+",";
+                }else if(i==arr.size()-1){
+                    chanId +=channel.getChannelId();
+                }
+            } catch (Exception e){
+                logger.error("导入渠道商失败，渠道名称：" + arr.get(i)[1], e);
+            }
+        }
+        long adminId = (long)session.getAttribute(request,"_admin_id_key");
+        logger.info("adminId = " + adminId);
+        Admin admin = adminMng.findById(adminId);
+        operationLogService.importStore(admin.getUsername(), chanId, chanId);
+
+    }
+}

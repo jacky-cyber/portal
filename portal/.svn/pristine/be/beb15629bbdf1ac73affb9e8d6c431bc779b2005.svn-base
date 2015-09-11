@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Trade>
+    <project>
+
+        <!-- 接口版本 -->
+        <ccb_pay_version>v1</ccb_pay_version>
+        <!-- 测试；0755000001 正式：0755000021 -->
+        <ccb_pay_partner_id>0755000001</ccb_pay_partner_id>
+        <!-- 建行 回调函数 -->
+        <ccb_pay_notify_url>/client/notify-tyzf</ccb_pay_notify_url>
+        <!-- 建行密钥 测试：12348314-9388-11de-b73f-0f19974d6b20 正式：ad52b37a-d7ca-11e2-9afc-01ae1d757403 -->
+        <ccb_key_suzhouccb>12348314-9388-11de-b73f-0f19974d6b20</ccb_key_suzhouccb>
+        <!-- 建行的支付接口 -->
+        <ccb_web_server_path_for_pay>http://113.106.91.163:7010/center/proxy/partner/v1/pay.jsp</ccb_web_server_path_for_pay>
+
+        <!--调用统一支付 01返回HTMl格式 -->
+        <response_mode_html>01</response_mode_html>
+        <!--调用统一支付 03返回报文格式 -->
+        <response_mode_baowen>03</response_mode_baowen>
+
+        <!-- 保留 -->
+        <voucher_type_yipaijifu>26</voucher_type_yipaijifu>
+
+
+        <!-- 中行支付参数 -->
+        <notify_url_suzhouboc>/client/notify-tyzf</notify_url_suzhouboc>
+        <notify_url_suzhouboc_xyzf>/client/notify-szboc</notify_url_suzhouboc_xyzf>
+        <notify_url_suzhouboc_s>/mall/orderDetailInfo.html</notify_url_suzhouboc_s>
+        <notify_url_suzhouboc_e>/mall/notify_e.html</notify_url_suzhouboc_e>
+        <!-- 证书库路径  -->
+        <keystorepath_suzhouboc>c:/suzhoutaodou.pfx</keystorepath_suzhouboc>
+        <keystorepassword_suzhouboc>111111</keystorepassword_suzhouboc>
+        <keypassword_suzhouboc>111111</keypassword_suzhouboc>
+        <!-- 手机商户号 -->
+        <merchantno_suzhouboc_sjzf>104320554990303</merchantno_suzhouboc_sjzf>
+        <!--  协议商户号 -->
+        <merchantno_suzhouboc_xyzf>104320554990304</merchantno_suzhouboc_xyzf>
+        <!-- 中行支付订单地址 -->
+        <apmpayorder_suzhouboc>https://ebspay.boc.cn/PGWPortal/APMPayOrder.do</apmpayorder_suzhouboc>
+        <!-- 协议查询地址 -->
+        <agrmtquery_suzhouboc>https://ebspay.boc.cn/PGWPortal/APMQueryAgreement.do</agrmtquery_suzhouboc>
+        <!-- 测试：http://183.62.101.195:7004/center/proxy/partner/v1/pay.jsp -->
+        <!-- 生产：http://pay.douyou100.com:7010/center/proxy/partner/v1/pay.jsp -->
+        <web_server_path_for_pay_boc>http://183.62.101.195:7004/center/proxy/partner/v1/pay.jsp</web_server_path_for_pay_boc>
+        <!-- 测试商户号密码：0755000001  12348314-9388-11de-b73f-0f19974d6b20-->
+        <!-- 生产商户号密码：0755000027  bd52b37a-d7ca-11e2-9afc-01ae1d757403-->
+        <key_suzhouboc>12348314-9388-11de-b73f-0f19974d6b20</key_suzhouboc>
+        <partner_id_suzhouboc>0755000001</partner_id_suzhouboc>
+
+
+        <!-- 上传图片目录 -->
+<!--        <img_path>/Volumes/shared/life/upload</img_path>
+        <file_path>/Volumes/shared/life/upload</file_path>
+       -->
+        <img_path>/nfsfile/upload/</img_path>
+        <file_path>/nfsfile/upload/</file_path>
+        <!-- 本机图片访问地址映射 -->
+        <base_path_upload>http://dev.ifunpay.com/upload2/</base_path_upload>
+
+
+        <!-- 商户端 	订单列表每页记录数 -->
+        <page_size>6</page_size>
+
+        <!-- 苏州建行 首页商品列表每页记录数 -->
+        <page_size_szccb>6</page_size_szccb>
+
+        <!-- 苏州中行 首页商品列表每页记录数 -->
+        <page_size_szboc>6</page_size_szboc>
+
+        <!-- 微信支付wxpay -->
+        <appid>wx309dfae25ed06c3c</appid>
+        <appsecret>ae89d27d3fe1e57cf3698dd44633875c</appsecret>
+        <!-- 支付专用签名串 -->
+        <paysignkey>UbjWc13tHwUtCjB4M01xmOhN26DFELx5XnzaVCHFc0bkZkWj1XRph0KQLp2XbC6GxFo1PDGxQpqQfnaNl5dFJ2x3W7wFg0ROPiRHsAgj1ecMCpCvuRILViPSsT6J4XBq</paysignkey>
+        <!-- 商户号 -->
+        <partnerid>1217482601</partnerid>
+        <!-- 初始密钥 -->
+        <partnerkey>5c82b67d33407c245a3549f8ddb8c343</partnerkey>
+
+        <!-- szboc登录链接 -->
+        <loginurl_szboc>mall/tologin.html</loginurl_szboc>
+        <!-- 需要拦截登录的地址 -->
+        <szboc_need_check_login>mall/myAccount.html,mall/myOrders.html,mall/toOrderConfirm.html,mall/myOrderPay.html,mall/orderPayTypeolist.html,mall/orderPayType.html,client/orderCart-add.html</szboc_need_check_login>
+        <!-- szccb登录链接 -->
+        <loginurl_szccb>mallszccb/tologin.html</loginurl_szccb>
+        <szccb_need_check_login>mallszccb/myAccount.html,mallszccb/myAccountNew.html,mallszccb/myOrders.html,mallszccb/myOrdersNew.html,mallszccb/toOrderConfirm.html,mallszccb/myOrderPay.html,mallszccb/orderPayTypeolist.html,mallszccb/orderDetailInfo.html,mallszccb/orderPayType.html,mallszccb/toOrderConfirmRd.html</szccb_need_check_login>
+
+        <!-- 访问通一用户地址测试用户密码：HJPTZS01/HJPTZS888888 -->
+        <!-- 中行生产用户密码：SZZH001/SZZHdtjrc -->
+        <!--<user_platform_request_url>http://192.168.6.146:4002/API/ApiDoing.aspx</user_platform_request_url>
+        <user_platform_app_key>ifunpay10</user_platform_app_key>
+        <user_platform_valid_code>ifunpay10</user_platform_valid_code>-->
+
+        <!-- 苏州中行发送给商户短信 时间点 -->
+        <send_sms_time1>9</send_sms_time1>
+        <send_sms_time2>13</send_sms_time2>
+        <send_sms_time3>17</send_sms_time3>
+        <send_sms_time4>21</send_sms_time4>
+        <!-- 是否启用新订单  1-启用 0-不启用-->
+        <new_order_start>1</new_order_start>
+
+        <!-- 是否启用发送凭证  1-启用 0-不启用-->
+        <certificate_start>0</certificate_start>
+
+        <!-- 多线程并发数量-->
+        <excutor-service-pool-size>10</excutor-service-pool-size>
+
+        <!-- 是否调用统一支付 1-是 ；0-否-->
+        <unity-pay-used>0</unity-pay-used>
+        <!--默认中奖的彩票注数量-->
+        <lottery-ticket-num>2</lottery-ticket-num>
+        <!-- 默认中奖的手机话费金额 -->
+        <phone-recharge-amount>10</phone-recharge-amount>
+
+        <!-- 客服电话 -->
+        <service-phone>400-881-6633</service-phone>
+
+        <!-- 本地商品购买步骤-->
+        <shop-steps>2</shop-steps>
+
+        <!-- 本地商品购买支付方式-->
+        <mobile-pay-ccb>SZCCB</mobile-pay-ccb>
+
+        <!-- 新订单默认接收人的手机号码-->
+        <default-received-mobile>13800138000</default-received-mobile>
+
+
+        <login_name>login-dhb</login_name>	<!-- 后台首页登陆页面名称  中行的：login-boc 大红包的：login-dhb-->
+        <logo_name>dahongbaologo.png</logo_name>	<!-- 后台页面显示logo图片名称 中行的：logoboc.png 大红包的：logodhb.png  大红包2.0 版本 logo：dahongbaologo.png    xianhongcai         2015-1-29 启用的logo  修改人 xianhongcai -->
+        <!-- 007ka话费充值接口  -->
+        <!-- ip  -->
+        <ka_ip>112.95.172.89</ka_ip>
+        <!-- 端口  -->
+        <ka_port>7207</ka_port>
+        <!-- 接口名  -->
+        <ka_interfaceName>007KA_B2B</ka_interfaceName>
+        <!-- 接口版本号  -->
+        <ka_interfaceNumber>1.0.0.1</ka_interfaceNumber>
+        <!-- 合作伙伴ID  007ka 提供  -->
+        <ka_merid>1000000007</ka_merid>
+        <!-- 资金账户  -->
+        <ka_merAccount>100000000000007</ka_merAccount>
+        <!-- 账户密码  -->
+        <ka_key>I5oCbrolpr4=</ka_key>
+        <!-- 币种  人民币  -->
+        <ka_curType>001</ka_curType>
+        <!-- pay parameters list -->
+        <server_port>8000</server_port>
+        <server_sleep_check_interval>120000</server_sleep_check_interval>
+        <!-- 年年卡server port -->
+        <server_port_yyc>8800</server_port_yyc>
+        <!--  年年卡 交互 字符编码类型-->
+        <ka_type>GBK</ka_type>
+        <!--  年年卡 是否测试   1 是-->
+        <ka_test>1</ka_test>
+        <!--  007ka话费充值对账-->
+        <!--  ftp id-->
+        <ka_ftpIp>58.61.36.164</ka_ftpIp>
+        <!--  ftp port-->
+        <ka_ftpPort>21</ka_ftpPort>
+        <!--  ftp name-->
+        <ka_ftpName>nnk_for_afb</ka_ftpName>
+        <!--  ftp key-->
+        <ka_ftpKey>afb@88877007</ka_ftpKey>
+
+        <!--澣银彩票充值，查询配置-->
+        <!--<HY_BASE_URL>http://180.168.168.86:15780/icsB2bStdTopupWeb/</HY_BASE_URL>-->
+        <HY_BASE_URL>http://ics.99wuxian.com/icsB2bStdTopupWeb/</HY_BASE_URL>
+        <HY_ENCODING>GB2312</HY_ENCODING> <!--编码-->
+        <HY_MOBILE_CHARGE_MER_ID>S559</HY_MOBILE_CHARGE_MER_ID> <!--由ics分配的商户ID-->
+        <HY_MOBILE_CHARGE_ACTIVITY_CODE>22267</HY_MOBILE_CHARGE_ACTIVITY_CODE> <!--由ics分配的业务活动标识-->
+        <HY_MOBILE_CHARGE_DEPARTMENT_ID>3</HY_MOBILE_CHARGE_DEPARTMENT_ID>
+        <HY_MOBILE_CHARGE_MDSE_CODE>Z0211092904</HY_MOBILE_CHARGE_MDSE_CODE>
+
+        <HY_LOTTERY_TICKET_MER_ID>S559</HY_LOTTERY_TICKET_MER_ID>
+        <HY_LOTTERY_TICKET_ACTIVITY_CODE>22466</HY_LOTTERY_TICKET_ACTIVITY_CODE>  <!--由ics分配的业务活动标识-->
+        <HY_LOTTERY_TICKET_DEPARTMENT_ID>3</HY_LOTTERY_TICKET_DEPARTMENT_ID>    <!--业务所属的部门ID-->
+        <HY_LOTTERY_TICKET_MDSE_CODE>LC0001CaiPing</HY_LOTTERY_TICKET_MDSE_CODE> <!--彩票商品code-->
+        <HY_LOTTERY_TICKET_PRICE>20</HY_LOTTERY_TICKET_PRICE>    <!--彩票单注金额-->
+
+
+        <!-- 建设银行充值验证公钥 -->
+        <shenzhen_ccb_public_key>30819c300d06092a864886f70d010101050003818a0030818602818076bbf4bc31a1964c257e88aebe124f2813cd909f265a9d4cd7b93fc0ecdbef960618c150d2eb9f61acb222dd68d99bf7ab9c343f7f21ba734d721297509b245bf27a8e7e49b8286d49a8c4253d29c6c912f547ce64796214fb2b130e5ffda0503036e269d0e1b0d5ff84a27249cd3d74788dcf36c407a0c3b188cdc1fa0ad1a7020111</shenzhen_ccb_public_key>
+        <shenzhen_ccb_mobile_pay_remark1>http://120.24.223.12:44808/mvc/</shenzhen_ccb_mobile_pay_remark1>
+        <!--<shenzhen_ccb_mobile_pay_remark1>http://dev.ifunpay.com:55544/mvc/</shenzhen_ccb_mobile_pay_remark1>-->
+        <shenzhen_ccb_mobile_pay_remark2>hehe</shenzhen_ccb_mobile_pay_remark2>
+
+        <!--民生银行手机支付参数 -->
+        <cmbc_corpId>06005</cmbc_corpId><!-- 商户id  由民生银行分配-->
+        <cmbc_corpName>商户test1</cmbc_corpName><!-- 商户名称 由民生银行指定-->
+        <cmbc_payerCurr>01</cmbc_payerCurr><!-- 币种 01 人民币-->
+        <cmbc_corpRetType>0</cmbc_corpRetType><!--是否实时返回支付状态 0 是 1 否-->
+        <cmbc_retUrl>http://120.24.223.12:44808/mvc/paid/CMBC/false</cmbc_retUrl> <!--处理结果返回的商户URL-->
+        <cmbc_usr_password>1111</cmbc_usr_password> <!--  登录时 解密用户信息的密码-->
+        <cmbc_refund_url>http://111.205.207.118:55003/epay/connectForRefund.do</cmbc_refund_url><!-- 退款url-->
+        <cmbc_dealNo>0001</cmbc_dealNo> <!-- 请求交易码-->
+
+        <!--商品二维码生成-->
+        <produce_environment_QR>http://pe.ifunpay.com:8001/dhb/mallszccb/pd/</produce_environment_QR> <!--生产环境商品生成二维码-->
+
+        <!--  http代理服务器配置 -->
+        <http_status_client_proxy_host>120.24.242.122</http_status_client_proxy_host>
+        <http_status_client_proxy_port>3128</http_status_client_proxy_port>
+
+        <executor-service-pool-size>10</executor-service-pool-size>
+
+
+        <portal_p_m_port_url>http://192.168.6.91:8080/dhb/knocker</portal_p_m_port_url> <!--  门户对大红包  个人中心 商户中心 接口 url-->
+        <portal_p_m_port_md5Key>testAppCode</portal_p_m_port_md5Key>  <!--门户对大红包  个人中心 商户中心 接口 md5的key -->
+
+        <testAppKey>testAppCode</testAppKey>
+
+
+        <service-phone>400-881-6633</service-phone>
+
+        <!-- export excel settings -->
+        <!-- The largest excel rows -->
+        <export_excel_max_row_size>1000</export_excel_max_row_size>
+
+        <!-- 是否处理前台回调 false-不处理 true-处理-->
+        <from_user>true</from_user>
+        <!-- 是否处理后台回调 false-不处理 true-处理-->
+        <from_back_end>true</from_back_end>
+    </project>
+</Trade>

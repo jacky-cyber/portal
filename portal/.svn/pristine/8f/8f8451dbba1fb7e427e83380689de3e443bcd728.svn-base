@@ -1,0 +1,57 @@
+package com.ifunpay.portal.dao;
+
+import com.ifunpay.portal.entity.OrderPayRefundEntity;
+import com.ifunpay.util.enums.PaymentStatusEnum;
+import org.apache.commons.lang.StringUtils;
+import org.hibernate.Query;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+
+/**
+ * Created by CongLong Xie on 2015/3/16.
+ */
+@Component
+public class OrderPayRefundDao extends BaseDao {
+
+    @Transactional
+    public void savePayInfo(OrderPayRefundEntity orderPayRefundEntity){
+        save(orderPayRefundEntity);
+    }
+
+
+    @Transactional
+    public OrderPayRefundEntity findByOrderId(String orderId){
+        String hql = "from OrderPayRefundEntity pay where pay.code = '"+orderId+"'";
+        Query query = getSession().createQuery(hql);
+        return (OrderPayRefundEntity)query.uniqueResult();
+    }
+
+
+    @Transactional
+    public List<OrderPayRefundEntity> findOrderRefundListByOrderId(String isPay,String orderId){
+        StringBuffer hql = new StringBuffer("from OrderPayRefundEntity pay where 1=1");
+        if (!StringUtils.isBlank(orderId)) {
+            hql.append(" and pay.orderNumber like '%"+orderId+"%'");
+        }
+        if (!StringUtils.isBlank(isPay)) {
+            hql.append(" and pay.isPay ='"+isPay+"'");
+        }
+        hql.append(" order by pay.payTime desc");
+        Query query = getSession().createQuery(hql.toString());
+        return query.list();
+    }
+
+    public List<OrderPayRefundEntity> findPayRefundOrderByOrderNumber(String orderNumber){
+        return getSession().createQuery("from OrderPayRefundEntity where code ='"+orderNumber+"' order by payTime desc ").list();
+    }
+
+
+    public OrderPayRefundEntity getPaySuccessEntity(String orderNumber){
+        return (OrderPayRefundEntity)getSession().createQuery("from OrderPayRefundEntity where code ='" + orderNumber + "' and isPay='1' and payStatus='" + PaymentStatusEnum.PaySucceeded+ "' order by payTime desc ").uniqueResult();
+    }
+
+    public void updatePayRefundEntity(OrderPayRefundEntity orderPayRefundEntity){
+        update(orderPayRefundEntity);
+    }
+}

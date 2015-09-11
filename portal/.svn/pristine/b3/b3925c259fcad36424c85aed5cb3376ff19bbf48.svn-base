@@ -1,0 +1,13 @@
+package com.jspgou.cms.dao;
+
+import com.jspgou.cms.entity.ChannelReport;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Created by jiang on 2015/9/7.
+ */
+public interface ReportDao {
+    public Map<String, Object> fetchChannelReport(Map<String, Object> filters, String sortField, boolean isASC, int start, int size);
+}

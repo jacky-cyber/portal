@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title> commerceReportCharts </title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript" src="${base}/r/gou/JScharts/sources/jscharts.js"></script>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>: <@s.m "commerceReport.all"/> - <@s.m "settlement.picture"/></div>
+        <form class="ropt">
+        </form>
+        <div class="clear"></div>
+    </div>
+    <div id="barGraph" style="float: left">Please input right data...</div>
+</div>
+
+    <script type="text/javascript">
+
+        var cn='${commerceName}';
+        cArr=cn.split(",");
+        var pa='${totalOrder}';
+        pArr=pa.split(",");
+
+        var barData = new Array();
+        for(var i=0; i<cArr.length; i++) {
+            if(NaN != cArr[i] && '' != cArr[i]){
+                var tmp=[cArr[i] , Number(pArr[i])];
+                barData.push(tmp);
+            }
+        }
+
+        if(NaN != barData && '' != barData) {
+            var barChart = new JSChart('barGraph', 'bar');
+            barChart.setDataArray(barData);
+            barChart.setTitle('商户商品销售统计');
+            barChart.setTitleColor('#8E8E8E');
+            barChart.setAxisNameX('');
+            barChart.setAxisNameY('');
+            barChart.setAxisNameFontSize(16);
+            barChart.setAxisNameColor('#999');
+            barChart.setAxisValuesAngle(30);
+            barChart.setAxisValuesColor('#777');
+            barChart.setAxisColor('#B5B5B5');
+            barChart.setAxisWidth(1);
+            barChart.setBarValuesColor('#2F6D99');
+            barChart.setAxisPaddingTop(60);
+            barChart.setAxisPaddingBottom(60);
+            barChart.setAxisPaddingLeft(45);
+            barChart.setTitleFontSize(11);
+            barChart.setBarColor('#2D6B96', 1);
+            barChart.setBarColor('#9CCEF0', 2);
+            barChart.setBarBorderWidth(0);
+            barChart.setBarSpacingRatio(50);
+            barChart.setBarOpacity(0.9);
+            barChart.setFlagRadius(6);
+            barChart.setTooltipPosition('nw');
+            barChart.setTooltipOffset(3);
+            barChart.setLegendShow(true);
+            barChart.setLegendPosition('right top');
+            barChart.setLegendForBar(1, '累计销售(元)');
+            barChart.setSize(616, 321);
+            barChart.setGridColor('#C6C6C6');
+            barChart.draw();
+        }
+
+    </script>
+</body>
+</html>

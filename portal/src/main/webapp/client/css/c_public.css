@@ -1,0 +1,112 @@
+@charset "utf-8";
+
+/*
+Description：public for mobile client
+Author: Li Wenbin
+***********************/
+body, div, dl, dt, dd, ul, ol, li, h1, h2, 
+h3, h4, h5, h6, pre, form, fieldset, input,
+textarea, p, blockquote, th, td, tr, button {
+	padding: 0;
+	margin: 0;
+}
+ul { list-style: none; }
+
+button{
+	-webkit-appearance: button;
+}
+.fl{ float: left;}
+.fr{ float: right; }
+.cur{cursor: pointer; }
+.clear { clear: both; }
+.Hide {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	-moz-binding: url('ellipsis.xml#ellipsis');
+}
+.f10 {
+	font-size: 12px; line-height:20px;margin-top:5px;
+}
+.f12{
+	font-size: 12px;
+}
+.f15{
+	font-size: 15px;
+}
+.f17{
+	font-size: 17px;
+}
+.f20 {
+	font-size: 20px;
+}
+.hsz {
+	color: #ffd401;
+}
+.bsz {
+	color: #FFFFFF;
+}
+.hhsz {
+	color: #c0c0c0;
+}
+
+
+.mg_l_5{
+	margin-left: 5px;
+}
+.mg_l_10{
+	margin-left: 10px;
+}
+.mg_l_20{
+	margin-left: 10px;
+}
+.mg_t_10{
+	margin-top: 10px;
+}
+.mg_t_15{
+	margin-top: 15px;
+}
+.mg_t_30{
+	margin-top: 15px;
+}
+
+.btn_k{
+	height:20px;
+	margin: 15px;
+	border: 1px solid #ccc;
+	background-color: #6B6B6B;
+	border-bottom: 1px solid #000;
+	border-top: 0px;
+	border-left: 0px;
+	border-right: 0px;
+	box-shadow: 0px 1px 0px #6a6a6a Inset;
+	padding: 10px;;
+	font: 18px bold ;
+	color:white;
+	text-align: center;
+}
+.div_a{
+	background-color: rgba(83,83,83, 0.4);
+	text-shadow: 1px 1px 0px #000;
+	width:90%;
+	padding:15px 2%;
+	margin:10px 3% 0px;
+	border-top: 0px;
+	border-left: 0px;
+	border-right: 0px;
+	border-bottom: 1px solid #000;
+	box-shadow: 0px 1px 0px #6a6a6a Inset;
+}
+.div_b{
+	background-color: #383838;
+	border: 1px solid #ccc;
+	border-bottom: 1px solid #000;
+	border-top: 0px;
+	border-left: 0px;
+	border-right: 0px;
+	box-shadow: 0px 1px 0px #6a6a6a Inset;
+}
+
+.inp_text{background-color: rgba(50,50,50, 0.2); border:1px solid #4c4c4c; height:31px; color:#ccc; outline:none; box-shadow:1px 1px 5px #000 Inset,0px 0px 1px #000; padding-left:10px; width:180px; }
+.inp_num{ width:100px; margin-left:7px;}

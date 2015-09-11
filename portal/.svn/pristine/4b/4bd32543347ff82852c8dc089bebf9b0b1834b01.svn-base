@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title></title>
+<#include "/jspgou_sys/head.html"/>
+<script type="text/javascript">
+$(function() {
+	$("#jvForm").validate();
+});
+</script>
+<style type="text/css">
+.params{padding-top:5px;}
+</style>
+</head>
+<body>
+<div class="body-box">
+<div class="rhead">
+	<div class="rpos"><@s.m "global.position"/>:  商户 - <@s.m "global.add"/></div>
+	<form class="ropt">
+		<input type="submit" value="<@s.m "global.backToList"/>" onclick="this.form.action='v_list.do';"/>
+	</form>
+	<div class="clear"></div>
+</div>
+    <#assign errorUserExist><@s.m "error.commerceNameExist"/></#assign>
+<@p.form id="jvForm" name="orderform" action="o_save.do">
+    <@p.text label="商户名称" name="name" required="true" class="required" vld="{required:true,rangelength:[3,100],remote:'v_check_commerce_name.do',messages:{remote:'${errorUserExist}'}}"/>
+    <@p.select  label="所属渠道"  name="chanIdRela.id" required="true" list=channelList listKey="id" listValue="channelName" />
+  <!--  <@p.text label="活动开始时间" name="collaborateStartTime" required="true" class="required" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:170px" />
+    <@p.text label="活动结束时间" name="collaborateEndTime" required="true" class="required" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:170px" />
+
+    <@p.text label="商户编码" name="code" required="true" class="required" maxlength="100"/>
+    <@p.text label="电子邮箱" name="email" maxlength="100" required="true" class="required" />-->
+    <@p.text label="联系人" name="linkMan" required="true" class="required" maxlength="100"/>
+    <@p.text label="联系电话" name="mobilePhone" required="true" class="required" maxlength="100"/>
+
+<!--    <@p.select  label="状态"  name="status" required="true" list={"1":"启用","2":"禁用"} />-->
+
+    <@p.text label="清算账号" name="account"   maxlength="100"/>
+    <@p.text label="清算周期" name="roundDay"   maxlength="100"/>
+    <@p.text label="清算费率" name="rate"   maxlength="100"/>
+    <@p.text label="描述" name="description"   maxlength="100"/>
+
+    <tr>
+        <td width="20%" class="pn-flabel pn-flabel-h">
+            地址:
+        </td>
+        <td width="80%" class="pn-fcontent">
+            <select onchange="initcity();" name="pro" id="pro">
+                <SCRIPT>creatprovince();</SCRIPT>
+            </select>
+            <select name="city" class="inp_text" id="city">
+                <option value="">选择城市</option>
+            </select>
+            详细地址:<input type="text" name="detailed"/>
+        </td>
+    </tr>
+   <!-- <@p.checkboxlist label="物流" name="express" list=logisticsList listKey="id" listValue="name" onclick="checkedThis(this);" /><@p.tr/>-->
+    <@p.td>
+
+    <input type="hidden" name="category" value="1"/>
+	<@p.submit code="global.submit"/> &nbsp; <@p.reset code="global.reset"/>
+   </@p.td>
+
+</@p.form>
+</div>
+</body>
+</html>

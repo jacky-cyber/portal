@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title></title>
+<#include "/jspgou_sys/head.html"/>
+<script type="text/javascript">
+
+</script>
+<style type="text/css">
+.params{padding-top:5px;}
+</style>
+</head>
+<body>
+<div class="body-box">
+    <div class="rpos">
+    <p>1、n_member_user</p>
+        <p>1)先导出原始数据表n_member_user中所有数据。再将该数据插入到目标数据库中的n_member_user表</p>
+        <p>2)将插入语句的字段改成如下格式，<span style="color:red;">注意插入的字段名</span></p>
+    <p>INSERT INTO n_member_user(uuid,name,phone,email,register_date,sex,register_ip,user_status,origin,last_login,last_login_ip,password,user_id,cmbc_user_id)
+        VALUES
+        VALUES(... ...)</p>
+        <!--<p>3)执行 <a style="color: green" href="/mvc/moveData/moveMemberUserData">更新商户关联的渠道</a> <span style="color:red;"> (初始化jc_core_user中只有一条admin用户的数据 )</span></p>-->
+        <br>
+        <p>2、t_channel</p>
+        <p>1)先导出原始n_bank_pay_info的数据。再将该数据导入到目标数据库中的n_bank_pay_info表</p>
+        <p>2)将t_channel原始的数据导出，再将该数据导入到目标数据库中的t_channel表。</p>
+        <p>3)先出入一条渠道名为’无‘的渠道</p>
+    INSERT INTO t_channel(id,uuid,CHANNEL_ID,CHANNEL_NAME,CHANNEL_CODE,CHANNEL_PARENT,DESCRIPTION,CREATE_DATE,CREATOR_ID,MODIFY_DATE,MODIFIER_ID,STATUS,PAY_METHOD,delStatus,collaborate_start_time,collaborate_end_time,bank_pay_info_id) VALUES
+    (1,'none', '', '无', null, null, 'none', '2014-08-01 09:05:58', 'ADMINUID-0000-0000-0000-000000000000', null, null, '2', 'P00003', '0', '2014-08-02 00:00:00', '2015-08-22 00:00:00', null);
+        <p>4)将插入语句的字段改成如下格式：<span style="color:red;">注意插入的字段名</span></p>
+        INSERT INTO t_channel(uuid,CHANNEL_ID,CHANNEL_NAME,CHANNEL_CODE,CHANNEL_PARENT,DESCRIPTION,CREATE_DATE,CREATOR_ID,MODIFY_DATE,MODIFIER_ID,STATUS,PAY_METHOD,delStatus,collaborate_start_time,collaborate_end_time,bank_pay_info_id) VALUES(... ...)
+        <p>5)UPDATE `t_channel` SET CHANNEL_PARENT = 'none' WHERE CHANNEL_PARENT is NULL and CHANNEL_NAME != '无';</p>
+
+        <p>6)执行 <a style="color: green" href ="/mvc/moveData/moveChannelData">更新关联的渠道</a></p>
+    <br>
+        <p>3、t_commerce</p>
+        <p>1)先原始导出数据表t_commerce中所有数据。再将该数据插入到目标数据库中的t_commerce表</p>
+        <p>2)将插入语句的字段改成如下格式：<span style="color:red;">注意插入的字段名</span></p>
+        <p>Insert into t_commerce(uuid,COMMERCE_ID,STATUS,NAME,MOBILE_PHONE,EMAIL,AREA,CREATE_DATE,CREATOR_ID,MODIFY_DATE,MODIFIER_ID,CHANNEL_ID,CODE,DESCRIPTION,SYN_STATUS,delStatus,collaborate_start_time,collaborate_end_time,checked,EXPRESS,special,sort,ADDRESS,LINKMAN,ACCOUNT,ROUND_DAY,RATE) VALUES(... ...)
+    </p>
+        <p>3)执行 <a style="color: green" href="/mvc/moveData/moveCommerceData">更新商户关联的渠道</a></p>
+
+        <br>
+
+        <p> 3、导入商品数据</p>
+        <p> 1)导入商品数据前提条件（1、在applicationContext.xml 配置文件中 配置要导入的数据库来源。
+        <p>  2、成功执行以上的数据导入操作。
+        <p>  3、在管理系统还没有创建分类时创建第一个分类，用作归类导入的所有商品 ，默认把所有导入的商品归类到第一个分类中。
+        <p>  "创建分类的步骤：一.在分类的类型管理中添加类型；商品分类模板前缀写‘分类’，商品内容模板前缀写‘商品’。
+        <p>  二.提交后返回列表保存分类列表和商品列表的默认字段。
+        <p>  三.在分类列表中添加分类，选择添加子类型为‘刚刚创建好的类型’；输入相应的分类信息提交。”
+        ）</p>
+        <p> 2)执行<a style="color: green" href ="/mvc/moveData/moveProductData"> 导入商品</a></p>
+        <p> 3)商品成功导入后，迁移商品图片(比如商品图片在/usr/share/nginx/html/upload/produtImg/Dec101456172014.jpg，迁移的路径为/usr/share/nginx/html/upload/u/201505/Dec101456172014.jpg)</p>
+
+        <p>4、导入订单数据</p>
+        <p>1)导入订单数据的前提条件（在成功导入完成商品数据后，没有对系统进行重启的前提下）</p>
+        <p>2)执行<a style="color: green" href ="/mvc/moveData/moveOrderData"> 导入订单</a></p>
+    </div>
+</div>
+</body>
+</html>

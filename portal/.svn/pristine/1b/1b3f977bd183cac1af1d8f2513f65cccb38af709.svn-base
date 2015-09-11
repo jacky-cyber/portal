@@ -1,0 +1,97 @@
+#searchContainer {
+  border:1px #b3e2ec solid;
+  padding:15px 0;
+  display:none;
+}
+#searchContainer .querytd {
+  padding-left: 15px;
+  height:30px;  
+}
+#searchContainer .querybt {
+  text-align:center;
+  height:30px;
+}
+
+.showScrollbarX { overflow-x:scroll;}
+.hideScrollbarX { overflow-x:auto;}
+
+.list {
+  border:1px #b3e2ec solid;
+} 
+.list th {
+  background:url(../images/th_bg.gif) repeat-x 1px 1px;
+  border:1px #b3e2ec solid;
+  padding:5px;
+  white-space:nowrap;
+}
+.list td {
+  padding:3px;
+  height:22px;
+  border:1px #b3e2ec solid;
+  line-height:160%;
+  white-space:nowrap;
+}
+.list tr{
+  background-color:#fff;
+}
+
+.inputStyle {
+  width:105px;
+  height:18px;
+  line-height:18px;
+
+  border:solid 1px #b5d6e6;
+}
+.selectStyle {
+  font-size:12px;
+  vertical-align:middle;
+  border:solid 1px #b5d6e6;
+}
+.inputStyle2 {
+  width:55px;
+  height:18px;
+  line-height:18px;
+  font-size:12px;
+  border:solid 1px #b5d6e6;
+}
+.submitbtn {
+  color:#525252;
+  font-size:12px;
+  width:59px;
+  height:27px;
+  line-height:27px;
+  background:url(../images/submitbtn_bg.gif) no-repeat;
+  border:0;
+
+}
+
+.subjoin {
+  border: 0;
+}
+.subjoin th {
+
+  border: 0;
+  padding-right: 10px;
+  font-size: 12px;
+  color: #333;
+  font-weight: normal;
+  width: 45%;
+  height: 25px;
+  text-align:right;
+}
+.subjoin td {
+  border: 0;
+  height:25px;
+}
+.auto-style1 {
+  text-align: left;
+  padding: 5px;
+  width: 50%;
+}
+
+.auto-style2 {
+  text-align: center;
+}
+.relsubmit{background:url(../images/rel.gif) left center no-repeat; border:0; padding-left:14px; height:16px; line-height:16px; *line-height:18px; overflow:hidden;}
+.delsubmit{background:url(../images/del.gif) left center no-repeat; border:0; padding-left:14px; height:16px; line-height:16px; *line-height:18px; overflow:hidden;}
+.compareSubmit{background:url(../images/tb.gif) left center no-repeat; border:0; padding-left:14px; height:16px; line-height:16px; *line-height:18px; overflow:hidden;}

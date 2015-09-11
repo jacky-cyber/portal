@@ -1,0 +1,46 @@
+package com.jspgou.cms.manager;
+
+import com.jspgou.cms.entity.*;
+import com.jspgou.common.page.Pagination;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Created by zhengjiang on 2015/3/9.
+ */
+public interface SettlementMng {
+
+    public Pagination getChannelReport(String name, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long CommerceId);
+    public List<Settlement> getChannelReport(String name, Date startTime, Date endTime, Long channelId, Long commerceId);
+
+    // interface for oms
+    public Map<String, Object> fetchChannelReport(Map<String, Object> filters, String sortField, boolean isASC, int start, int size);
+
+    public Pagination getCommerceReport(String name, String channelName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long CommerceId);
+    public List<Settlement> getCommerceReport(String name, String channelName, Date startTime, Date endTime, Long channelId, Long CommerceId);
+
+    public Pagination getProductReport(String productName, String commerceName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long commerceId);
+    public List<ProductReport> getProductReport(String productName, String commerceName, Date startTime, Date endTime, Long channelId, Long commerceId);
+
+    public Pagination getProductReporByRMB(String productName, String commerceName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long commerceId);
+    public List<ProductReportEntity> getProductReporByRMB(String productName, String commerceName, Date startTime, Date endTime, Long channelId, Long commerceId);
+
+    public Pagination getVendorReport(String name, Date startTime, Date endTime, Long channelId, Long commerceId, int pageNo, int pageSize);
+    public List<VendorReport> getVendorReport(String name, Date startTime, Date endTime, Long channelId, Long commerceId);
+
+    public Pagination getVendorReportByRMB(String name, Date startTime, Date endTime, int pageNo, int pageSize);
+    public List<VendorReportEntity> getVendorReportByRMB(String name, Date startTime, Date endTime);
+
+    public Pagination getCommerceReportByPayMethodAmount(String name, Date startTime, Date endTime, int pageNo, int pageSize);
+    public List<ReportByAmountEntity> getCommerceReportByPayMethodAmount(String name, Date startTime, Date endTime);
+
+    public Pagination getCommerceReportByPayMethod(String name, Date startTime, Date endTime, int pageNo, int pageSize);
+    public List<ReportEntity> getCommerceReportByPayMethod(String name, Date startTime, Date endTime);
+
+    Pagination getCommerceReportDetails(Long commerceId, String commerceName, String channelName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId);
+    List<ProductReportDetail> getCommerceReportDetails(String commerceName, String channelName, Date startTime, Date endTime, Long channelId, Long commerceId);
+
+    Pagination getAccountReport(String account, Date startTime, Date endTime, int pageNo, int pageSize);
+}

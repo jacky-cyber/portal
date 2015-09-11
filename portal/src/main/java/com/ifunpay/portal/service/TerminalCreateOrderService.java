@@ -1,0 +1,162 @@
+package com.ifunpay.portal.service;
+
+import com.ifunpay.portal.controller.interact.ResponseContent;
+import com.ifunpay.portal.controller.interact.ResponseContentHeader;
+import com.ifunpay.portal.dao.order.OrderEntityDao;
+import com.jspgou.cms.manager.OrderMng;
+import com.jspgou.cms.manager.ProductMng;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+
+
+/**
+ * Created by David on 2015/4/28.
+ */
+@Service
+public class TerminalCreateOrderService {
+    private Logger logger = Logger.getLogger(TerminalCreateOrderService.class);
+    @Resource
+    OrderMng orderMng;
+    @Resource
+    private OrderEntityDao orderEntityDao;
+    @Resource
+    private ThreadPoolService threadPoolService;
+
+    @Resource
+    private AlterTerminalStockService alterTerminalStockService;
+
+    @Resource
+    private ProductMng productMng;
+
+    public void createOrderForTerminal(String requestJson, ResponseContent responseContent, ResponseContentHeader header) {
+        logger.info("create new order for terminal ");
+        logger.debug("begin");
+        try {
+
+            JSONObject par = JSONObject.fromObject(requestJson);
+            logger.info("JSONObject value is :" + par);
+            buildOrder(par, header, responseContent);
+        } catch (Exception e) {
+            logger.info("create order failed :", e);
+            header.setStatus(1);
+            header.setError_message("create order false");
+        }
+        logger.debug("end");
+    }
+
+
+    /**
+     * create order
+     *
+     * @param par
+     * @param responseContent
+     */
+    public void buildOrder(JSONObject par, ResponseContentHeader header, ResponseContent responseContent) {
+        JSONObject headDatas = par.getJSONObject("header");
+        JSONObject bodyDatas = par.getJSONObject("body");
+        List<Object> body = new ArrayList<>();
+        try {
+            Long price = bodyDatas.getLong("price");
+            String payMethod = bodyDatas.getString("pay_method");
+            String userAccount = (String) bodyDatas.get("user_account");
+            String serialNumber = bodyDatas.getString("serial_number");
+            JSONArray products = bodyDatas.getJSONArray("merchandises");
+            String posNumber = "";
+            Long[] productIds = new Long[products.size()];
+            Integer[] productCounts = new Integer[products.size()];
+            for (int i=0;i<products.size();i++){
+                productIds[i] = Long.valueOf(products.getJSONObject(i).get("id").toString());
+                productCounts[i] = (Integer) products.getJSONObject(i).getInt("count");
+            }
+           /* Long productId = Long.valueOf(products.getJSONObject(0).get("id").toString());
+            Integer productCount = (Integer) products.getJSONObject(0).getInt("count");*/
+            for (int i=0;i<productIds.length;i++){
+                logger.info("count ="+productCounts[i]);
+            }
+
+            String terminalId = headDatas.getString("terminal_id");
+            Integer deliverStatus = bodyDatas.getInt("deliver_status");
+            Long createTime = bodyDatas.getLong("order_timestamp");
+            Long payTime = bodyDatas.getLong("pay_timestamp");
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String d = format.format(createTime);
+            Date date = null;
+            try {
+                date = format.parse(d);
+            } catch (ParseException e) {
+                logger.info("change date error" + e);
+            }
+            String terminalOrderId = null;
+            try {
+                terminalOrderId = bodyDatas.getString("terminal_order_id");
+            } catch (Exception e) {
+                terminalOrderId = null;
+            }
+            String orderId = null;
+            try {
+                orderId = bodyDatas.getString("order_id");
+            } catch (Exception e) {
+                orderId = null;
+            }
+
+            if (null != orderId && orderId.length() > 0) {
+                logger.debug("creating order...");
+                //orderMng.updateOrder(orderId, price, payMethod, serialNumber, userAccount, posNumber, deliverStatus);
+                orderEntityDao.terminalUpdateOrderEntity(orderId,price,payMethod,serialNumber, userAccount, posNumber, deliverStatus);
+               if(0==deliverStatus) {
+                   try {
+                       threadPoolService.execute(() -> {
+
+                           alterStock(terminalId, productIds, productCounts);
+                       });
+                   }catch (Exception e){
+                       logger.info("修改库存异常",e);
+                   }
+
+               }
+            } else if (null != terminalOrderId && terminalOrderId.length() > 0) {
+                logger.debug("creating terminal order...");
+                //orderMng.terminalCreateOrder(price, payMethod, productId, productCount, terminalId, deliverStatus, date, webId, memberId, shippingMethodId, deliveryInfo, serialNumber, userAccount);
+                orderEntityDao.terminalBuildOrderEntity(productIds,price,productCounts,payMethod,terminalId,deliverStatus,date,payTime,serialNumber,userAccount,terminalOrderId);
+                if(0==deliverStatus) {
+                    try {
+                        threadPoolService.execute(() -> {
+
+                            alterStock(terminalId, productIds, productCounts);
+                        });
+                    }catch (Exception e){
+                        logger.info("修改库存异常",e);
+                    }
+                }
+            }else{
+                logger.debug("no order to create");
+            }
+
+        } catch (Exception e) {
+            header.setStatus(1);
+            header.setError_message("create new order failed: " + e.getMessage());
+            logger.error("create new order failed", e);
+        }
+
+
+    }
+
+    public void alterStock(String terminalId,Long[]  productIds,Integer[]  productCounts){
+        for (int i = 0;i<productIds.length;i++){
+            alterTerminalStockService.alterStock(terminalId, productIds[i], productCounts[i]);
+        }
+        productMng.reduceInventory(productIds,productCounts);
+
+    }
+}
+

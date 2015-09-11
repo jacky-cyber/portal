@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+        function optDelete() {
+            if(Pn.checkedCount('ids')<=0) {
+                alert("<@s.m 'error.checkRecord'/>");
+                return;
+            }
+            if(!confirm("<@s.m 'global.confirm.delete'/>")) {
+                return;
+            }
+            var f = document.getElementById('tableForm');
+            f.action="o_delete.do";
+            f.submit();
+        }
+
+        function getTableForm(){
+
+            return document.getElementById("tableForm");
+        }
+    </script>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>: <@s.m "member.function"/> - <@s.m "global.list"/></div>
+        <!--<form class="ropt">
+            <input type="submit" value="<@s.m "global.add"/>" onclick="this.form.action='v_add.do';"/>
+        </form>-->
+        <div class="clear"></div>
+    </div>
+    <div class="rhead">
+        <form id="searchModel" action="./v_list.do">
+            <div style="padding-top:5px">
+                <input type="hidden" name="pageNo"/>
+                注册时间：<input type="text" name="startTime" value="${startTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})" style="width:100px"/>&nbsp;至&nbsp;<input type="text" name="endTime" value="${endTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})" style="width:100px"/>
+                用户手机：<input type="text" name="phone" value="${phone!}"/>
+                注册IP ：<input type="text" name="registerIp" value="${registerIp!}"/>
+                来源：<!--<input type="text" name="origin" value="${origin!}"/>-->
+                <select name="origin" value="${origin!}" >
+                    <option value="">请选择</option>
+                    <option value="0">建行</option>
+                    <option value="2">民生银行</option>
+                    <option value="1">其他</option>
+                </select>
+                <input type="submit"  value="<@s.m "global.query"/>" />
+            </div>
+        </form>
+        <div class="clear"></div>
+    </div>
+
+    <form id="tableForm" method="post">
+        <input type="hidden" name="pageNo" value="${pageNo!}"/>
+        <@p.table value=pagination;member,i,has_next><#rt/>
+        <@p.column title="<input type='checkbox' onclick='Pn.checkbox(\"ids\",this.checked)'/>" width="20">
+        <input type='checkbox' name='ids' value='${member.id}'/><#t/>
+    </@p.column><#t/>
+    <@p.column title="ID">${member.id}</@p.column><#t/>
+<@p.column code="member.username">${member.name!}</@p.column><#t/>
+<@p.column code="用户手机">${member.phone!}</@p.column><#t/>
+<@p.column code="邮箱">${member.email!}</@p.column><#t/>
+<@p.column code="注册IP">${member.registerIp!}</@p.column><#t/>
+<@p.column code="注册时间">${member.registerDate!}</@p.column><#t/>
+<@p.column code="最近登录时间">${member.lastLogin!}</@p.column><#t/>
+<@p.column code="最近登录IP">${member.lastLoginIp!}</@p.column><#t/>
+<@p.column code="用户状态">
+    <#if  member.userStatus??>
+        <#if member.userStatus==0><@s.m "memberUser.status.0"/>
+            <#elseif member.userStatus==1><@s.m "memberUser.status.1"/>
+            <#elseif  member.userStatus==2><@s.m "memberUser.status.2"/>
+        </#if>
+        <#else><@s.m "memberUser.status.3"/>
+    </#if>
+</@p.column><#t/>
+<@p.column code="性别">
+    <#if member.sex??>
+        <#if member.sex==0><@s.m "memberUser.sex.0"/>
+            <#elseif member.sex==1><@s.m "memberUser.sex.1"/>
+        </#if>
+        <#else><@s.m "memberUser.sex.2"/>
+    </#if>
+</@p.column><#t/>
+<@p.column code="来源">
+    <#if member.origin??>
+        <#if member.origin==0><@s.m "memberUser.origin.0"/>
+            <#elseif member.origin==2>民生银行
+                <#elseif member.origin==1>其他
+        </#if>
+    </#if>
+</@p.column><#t/>
+</@p.table>
+<div><input type="button" value="<@s.m "global.delete"/>" onclick="optDelete();"/></div>
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+<script type="text/javascript">
+    $("select[name='origin']").find("option[value='${origin!}']").attr("selected",true);
+    function _gotoPage(pageNo) {
+        var tableForm = document.getElementById('searchModel');
+        $("input[name=pageNo]").val(pageNo);
+        tableForm.action="v_list.do";
+        tableForm.submit();
+    }
+</script>
+</html>

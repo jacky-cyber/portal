@@ -1,0 +1,245 @@
+package com.ifunpay.portal.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ifunpay.portal.entity.order.OrderEntity;
+import com.ifunpay.util.enums.PayMethodEnum;
+import com.ifunpay.util.enums.PaymentStatusEnum;
+
+import javax.persistence.*;
+import java.util.Date;
+
+/**
+ * 付款 和 退款
+ * Created by Yu on 2014/12/5.
+ */
+@Entity
+@Table(name = "n_order_pay_refund")
+public class OrderPayRefundEntity {
+
+    private String id;
+
+    /**
+     * 是否付款
+     * 1: 付款
+     * 0： 退款
+     */
+    private char isPay;
+
+    /**
+     * 订单
+     */
+    private OrderEntity entity;
+    private String code;
+    /**
+     * 金额
+     */
+    private long amount ;
+    /**
+     * 银行流水号
+     */
+    private String serialNumber;
+    /**
+     * 支付类型 4-一拍支付
+     */
+    private PayMethodEnum payMethod;
+    /**
+     * 帐号
+     */
+    private String accountNumber;
+    /**
+     * 支付时间
+     */
+    private Date payTime;
+    /**
+     * 支付状态 1-未支付 2-付款成功 3-退款成功 4-退款失败
+     */
+    private PaymentStatusEnum payStatus;
+
+
+    private Commerce commerce;
+
+
+    /**
+     * 付款序列号
+     * @return
+     */
+    private String refundSerialNumber;
+
+
+    /**
+     * 付款人
+     */
+    private String accountName;
+
+
+    /**
+     * 退款操作员
+     * @return
+     */
+    private String operator;
+
+    /**
+     * pos机编号
+     * @return
+     */
+    private String posNumber;
+
+    @Id
+    @Column(name = "id")
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+
+    @Basic
+    @Column(name = "is_pay")
+    public char getIsPay() {
+        return isPay;
+    }
+
+    public void setIsPay(char isPay) {
+        this.isPay = isPay;
+    }
+
+
+
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    public OrderEntity getEntity() {
+        return entity;
+    }
+
+    public void setEntity(OrderEntity entity) {
+        this.entity = entity;
+    }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "commerce_id")
+    public Commerce getCommerce() {
+        return commerce;
+    }
+
+    public void setCommerce(Commerce commerce) {
+        this.commerce = commerce;
+    }
+
+    @Basic
+    @Column(name = "order_number")
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+
+
+    @Basic
+    @Column(name = "amount")
+    public long getAmount() {
+        return amount;
+    }
+
+    public void setAmount(long amount) {
+        this.amount = amount;
+    }
+
+
+    @Basic
+    @Column(name = "serial_number")
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pay_method")
+    public PayMethodEnum getPayMethod() {
+        return payMethod;
+    }
+
+    public void setPayMethod(PayMethodEnum payMethod) {
+        this.payMethod = payMethod;
+    }
+
+    @Basic
+    @Column(name = "account_number")
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
+    @Basic
+    @Column(name = "account_name")
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
+    }
+
+    @Basic
+    @Column(name = "pay_time")
+    public Date getPayTime() {
+        return payTime;
+    }
+
+    public void setPayTime(Date payTime) {
+        this.payTime = payTime;
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pay_status")
+    public PaymentStatusEnum getPayStatus() {
+        return payStatus;
+    }
+
+    public void setPayStatus(PaymentStatusEnum payStatus) {
+        this.payStatus = payStatus;
+    }
+
+    @Basic
+    @Column(name = "refund_serial_number")
+    public String getRefundSerialNumber() {
+        return refundSerialNumber;
+    }
+
+    public void setRefundSerialNumber(String refundSerialNumber) {
+        this.refundSerialNumber = refundSerialNumber;
+    }
+
+
+    @Basic
+    @Column(name = "operator")
+    public String getOperator() {
+        return operator;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
+    }
+
+    @Basic
+    @Column(name = "pos_number")
+    public String getPosNumber() {
+        return posNumber;
+    }
+
+    public void setPosNumber(String posNumber) {
+        this.posNumber = posNumber;
+    }
+}

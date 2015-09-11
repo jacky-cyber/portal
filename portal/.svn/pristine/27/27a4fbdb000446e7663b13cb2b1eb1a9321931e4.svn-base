@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="com.jspgou.cms.entity">
+	<class name="Order" table="jc_shop_order">
+		<meta attribute="sync-DAO">false</meta>
+		<cache usage="read-write"/>
+		<id name="id" type="java.lang.Long" column="order_id"><generator class="native"/></id>
+		<property name="code" column="code" type="string" not-null="true" length="20"/>
+		<property name="comments" column="comments" type="string" not-null="false" length="255"/>
+		<property name="ip" column="ip" type="string" not-null="true" length="50"/>
+		<property name="createTime" column="create_time" type="timestamp" not-null="true"/>
+		<property name="shippingTime" column="shipping_time" type="timestamp" not-null="false"/>
+		<property name="finishedTime" column="finished_time" type="timestamp" not-null="false"/>
+		<property name="lastModified" column="last_modified" type="timestamp" not-null="true"/>
+		<property name="productPrice" column="product_price" type="long" not-null="false" length="20"/>
+		<property name="freight" column="freight" type="double" not-null="false" length="20"/>
+		<property name="total" column="total" type="long" not-null="true" length="20"/>
+		<property name="score" column="score" type="integer" not-null="true" length="10"/>
+		<property name="weight" column="weight" type="double" not-null="true" length="10"/>
+		<property name="couponPrice" column="coupon_price" type="double" not-null="false" length="10"/>
+		<property name="productName" column="productName" type="string" not-null="false" length="255"/>
+		<property name="paymentStatus" column="payment_status" type="integer" not-null="true" length="10"/>
+		<property name="shippingStatus" column="shipping_status" type="integer" not-null="true" length="10"/>
+		<property name="status" column="status" type="integer" not-null="true" length="10"/>
+		<property name="tradeNo" column="tradeno" type="string" not-null="false" length="100"/>
+		<property name="paymentCode" column="payment_code" type="string" not-null="false" length="150"/>
+		<property name="receiveName" column="receive_name" type="string" not-null="false" length="100"/>
+		<property name="receiveAddress" column="receive_address" type="string" not-null="false" length="100"/>
+		<property name="receiveZip" column="receive_zip" type="string" not-null="false" length="100"/>
+		<property name="receivePhone" column="receive_phone" type="string" not-null="false" length="100"/>
+		<property name="receiveMobile" column="receive_mobile" type="string" not-null="false" length="100"/>
+        <property name="serialNo" column="serial_no" type="string" not-null="false" length="100"/>
+
+		<property name="originalPrice" column="original_price" type="long" not-null="false" length="8"/>
+		<property name="diffPrice" column="diff_price" type="long" not-null="false" length="8"/>
+
+        <!-- 订单是否删除，1-删除 0-未删除-->
+        <property name="del" column="del" type="integer" not-null="false" length="4"/>
+
+        <property name="terminalId" column="terminal_id" type="string" not-null="false" length="50"/>
+        <property name="terminalOrderId" column="terminal_order_id" type="string" not-null="false" length="50"/>
+
+        <!-- 订单类型 1.本地商品，2.虚拟商品，3.商城商品，4.金融商品 -->
+        <property name="orderType" column="order_type" type="integer" not-null="false" length="20"/>
+
+		<property name="payAccountName" column="pay_account_name" type="java.lang.String" not-null="false" length="100"/>
+	
+		<many-to-one name="website" column="website_id" class="com.jspgou.core.entity.Website" not-null="false"></many-to-one>
+		<many-to-one name="member" column="member_id" class="ShopMember" not-null="false"></many-to-one>
+        <many-to-one name="memberUserEntity" column="member_user_id" class="com.ifunpay.portal.entity.MemberUserEntity" not-null="false"></many-to-one>
+		<many-to-one name="payment" column="payment_id" class="Payment" not-null="true"></many-to-one>
+		<many-to-one name="shipping" column="shipping_id" class="Shipping" not-null="false"></many-to-one>
+		<many-to-one name="returnOrder" column="return_id" class="OrderReturn" not-null="false"></many-to-one>
+        <many-to-one name="product" column="product_id" class="Product" not-null="false" lazy="false"></many-to-one>
+		<set name="items" cascade="all-delete-orphan" inverse="true" order-by="orderitem_id">
+			<cache usage="read-write"/>
+			<key column="order_id"/>
+			<one-to-many class="OrderItem"/>
+		</set>
+	</class>
+</hibernate-mapping>

@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+        function getTableForm() {
+            return document.getElementById('tableForm');
+        }
+        function optDelete() {
+            if(Pn.checkedCount('ids')<=0) {
+                alert("<@s.m 'error.checkRecord'/>");
+                return;
+            }
+            if(!confirm("<@s.m 'global.confirm.delete'/>")) {
+                return;
+            }
+            var f = getTableForm();
+            f.action="o_delete.do";
+            f.submit();
+        }
+//        function optPriority() {
+//            var f = getTableForm();
+//            f.action="o_priority.do";
+//            f.submit();
+//        }
+
+        $(document).ready(function(){
+            $("table tr").mousemove(function(){
+                $(this).css({"background-color":"#84ccc9"});
+            });
+            $("table tr").mouseout(function(){
+                $(this).css({"background-color":"white"});
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>: 限购管理  - <@s.m "global.list"/></div>
+        <form class="ropt">
+            <input type="submit" value="<@s.m "global.add"/>" onclick="this.form.action='v_add.do';"/>
+        </form>
+        <div class="clear"></div>
+    </div>
+    <div class="rhead">
+        <form action="v_list.do" method="post">
+            限购名称：<input name="name" value="${name!}" style="width:100px"/>
+            渠道名称: <input name="channelName" value="${channelName!}" style="width:100px"/>
+            限购范围：<select  name="area"  style="width:100px"/>
+            <option value="">无</option>
+                <option value="1"<#if area??> <#if area==1!>selected="selected"</#if></#if>>渠道多商品</option>
+            <option value="2"<#if area??> <#if area==2!>selected="selected"</#if></#if>>单个商品</option>
+            <option value="3"<#if area??> <#if area==3!>selected="selected"</#if></#if>>终端多商品</option>
+            <option value="4"<#if area??> <#if area==4!>selected="selected"</#if></#if>>终端单商品</option>
+            </select>
+            限购类型：<select  name="favorableType"  style="width:100px"/>
+            <option value="">无</option>
+            <option value="1"<#if favorableType??> <#if favorableType==1!>selected="selected"</#if></#if>>固定周期优惠</option>
+            <option value="2"<#if favorableType??> <#if favorableType==2!>selected="selected"</#if></#if>>固定月日优惠</option>
+            <option value="3"<#if favorableType??> <#if favorableType==3!>selected="selected"</#if></#if>>自定义周期限购</option>
+            <option value="4"<#if favorableType??> <#if favorableType==4!>selected="selected"</#if></#if>>前N笔优惠</option>
+            </select>
+            限购数量：<select  name="amountType"  style="width:70px"/>
+            <option value="">无</option>
+            <option value="1"<#if amountType??> <#if amountType==1!>selected="selected"</#if></#if>>订单数</option>
+            <option value="2"<#if amountType??> <#if amountType==2!>selected="selected"</#if></#if>>商品数</option>
+            </select>
+            限购方式：<select  name="manner"  style="width:70px"/>
+            <option value="">无</option>
+            <option value="0"<#if manner??> <#if manner==0!>selected="selected"</#if></#if>>登录</option>
+            <option value="1"<#if manner??> <#if manner==1!>selected="selected"</#if></#if>>非登录</option>
+            </select>
+            开始时间：<input   colspan="2"   name="startTime"value="${startTime!}" class="Wdate "  onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:120px; height:17px"/>
+            结束时间：<input   colspan="2"   name="endTime" value="${startTime!}"  class="Wdate "  onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:120px ;height:17px"/>
+
+            商品名称：<input name="productName" value="${productName!}" style="width:100px"/>
+            <input type="submit"  class="ropt" value="<@s.m "global.query"/>" />
+        </form>
+    </div>
+    <form id="tableForm" method="post">
+        <input type="hidden" name="pageNo" value="${pageNo!}"/>
+        <@p.table value=pagination;favorable,i,has_next><#rt/>
+        <@p.column title="<input type='checkbox' onclick='Pn.checkbox(\"ids\",this.checked)'/>" width="20">
+        <input type='checkbox' name='ids' value='${favorable.id}'/><#t/>
+    </@p.column><#t/>
+    <@p.column title="ID">${favorable.id}<input type="hidden" name="wids" value="${favorable.id}"/></@p.column><#t/>
+<@p.column code="名称"><a href="v_view.do?id=${favorable.id}&pageNo=${pageNo!}" style='color: #990000';>${favorable.name!}</a></@p.column><#t/>
+<@p.column code="渠道">${favorable.channelName!}</@p.column><#t/>
+<#if favorable.area??>
+ <#if 1==favorable.area >
+    <@p.column code="限购范围">渠道多商品</@p.column><#t/>
+<#elseif 2==favorable.area>
+    <@p.column code="限购范围">单个商品</@p.column><#t/>
+<#elseif 3==favorable.area>
+    <@p.column code="限购范围">终端多商品</@p.column><#t/>
+<#elseif 4==favorable.area>
+    <@p.column code="限购范围">终端单商品</@p.column><#t/>
+</#if>
+<#else>
+    <@p.column code="限购范围"></@p.column><#t/>
+</#if>
+<#if favorable.favorableType??>
+<#if 1==favorable.favorableType >
+    <@p.column code="限购类型">固定周期优惠</@p.column><#t/>
+<#elseif 2==favorable.favorableType>
+    <@p.column code="限购类型">固定月日优惠</@p.column><#t/>
+<#elseif 3==favorable.favorableType>
+    <@p.column code="限购类型">自定义周期限购</@p.column><#t/>
+<#elseif 4==favorable.favorableType>
+    <@p.column code="限购类型">前N笔优惠</@p.column><#t/>
+</#if>
+<#else>
+    <@p.column code="限购类型"></@p.column><#t/>
+</#if>
+<#if favorable.amountType??>
+<#if 1==favorable.amountType >
+    <@p.column code="限购数量">订单:${favorable.orderAmount}</@p.column><#t/>
+<#elseif 2==favorable.amountType>
+    <@p.column code="限购数量">商品:${favorable.productAmount}</@p.column><#t/>
+</#if>
+<#else>
+    <@p.column code="限购数量"></@p.column><#t/>
+</#if>
+<#if favorable.manner??>
+<#if 0==favorable.manner >
+    <@p.column code="限购方式">登录</@p.column><#t/>
+<#elseif 1==favorable.manner>
+    <@p.column code="限购方式">非登录</@p.column><#t/>
+<#else>
+        <@p.column code="限购方式"></@p.column><#t/>
+</#if>
+<#else>
+    <@p.column code="限购方式"></@p.column><#t/>
+</#if>
+<@p.column code="开始时间">${favorable.startTime!}</@p.column><#t/>
+<@p.column code="结束时间">${favorable.endTime!}</@p.column><#t/>
+
+
+<@p.column code="global.operate" >
+<a href="v_edit.do?id=${favorable.id}&pageNo=${pageNo!}">修改</a> | <#rt/>
+<a href="o_delete.do?ids=${favorable.id}&pageNo=${pageNo!}" onclick="if(!confirm('<@s.m "global.confirm.delete"/>')) {return false;}"><@s.m "global.delete"/> | </a><#t/>
+<a href="p_relieveProduct.do?id=${favorable.id}&pageNo=${pageNo!}" onclick="if(!confirm('确定全部解除关联吗？')) {return false;}">解除商品关联 | </a><#t/>
+<a href="favorableProduct/v_list.do?favorableId=${favorable.id}&pageNo=${pageNo!}">关联商品</a><#t/>
+</@p.column><#t/>
+</@p.table>
+<div><input type="button" value="<@s.m "global.delete"/>" onclick="optDelete();"/>
+    <!--&nbsp;<input type="button" value="<@s.m "global.saveOrder"/>" onclick="optPriority();"/>-->
+</div>
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+</html>

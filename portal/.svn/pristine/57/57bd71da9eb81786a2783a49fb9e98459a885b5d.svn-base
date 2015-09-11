@@ -1,0 +1,566 @@
+package com.jspgou.cms.action.admin.main;
+
+import com.ifunpay.portal.entity.BankPayInfo;
+import com.ifunpay.portal.entity.Channel;
+import com.ifunpay.portal.entity.Commerce;
+import com.ifunpay.portal.service.MemberUserService;
+import com.ifunpay.portal.service.commerce.ChannelService;
+import com.ifunpay.portal.service.commerce.CommerceService;
+import com.ifunpay.portal.service.log.OperationLogService;
+import com.ifunpay.portal.util.SessionUtil;
+import com.jspgou.cms.dao.SequenceDao;
+import com.jspgou.cms.entity.ShopAdmin;
+import com.jspgou.cms.manager.LogisticsMng;
+import com.jspgou.cms.manager.ShopAdminMng;
+import com.jspgou.common.page.Pagination;
+import com.jspgou.common.web.CookieUtils;
+import com.jspgou.common.web.ResponseUtils;
+import com.jspgou.common.web.session.SessionProvider;
+import com.jspgou.core.entity.Admin;
+import com.jspgou.core.entity.Role;
+import com.jspgou.core.entity.Website;
+import com.jspgou.core.manager.AdminMng;
+import com.jspgou.core.manager.RoleMng;
+import com.jspgou.core.manager.UserMng;
+import com.jspgou.core.utils.ExcelUtils;
+import com.jspgou.core.web.SiteUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import static com.jspgou.common.page.SimplePage.cpn;
+
+/**
+ *
+ * Created by Conglong Xie on 2015/4/21.
+ */
+@Controller
+public class ChannelAction {
+
+    private static Logger logger = Logger.getLogger(ChannelAction.class);
+
+    @Resource
+    private SessionProvider session;
+
+    @Resource
+    private SequenceDao sequenceDao;
+
+    @Resource
+    private CommerceService commerceService;
+
+
+    @Resource
+    private ChannelService channelService;
+
+    @Resource
+    private OperationLogService operationLogService;
+
+    /**
+     * get pagination
+     * @param channelName
+     * @param pageNo
+     * @param request
+     * @param model
+     * @return
+     */
+    @RequestMapping(value = "/channel-local/v_list.do")
+    public String channelPagination(String channelName, Date startTime, Date endTime, Integer pageNo, HttpServletRequest request, ModelMap model) {
+        Long channelId = sessionUtil.getChannelId(request);
+        Long commerceId = sessionUtil.getCommerceId(request);
+
+        model.addAttribute("startTime", startTime);
+        model.addAttribute("endTime", endTime);
+        model.addAttribute("channelId", channelId);
+        model.addAttribute("channelName", channelName);
+        Pagination pagination = (null != commerceId && null == channelId) ? new Pagination() :
+                channelService.getPaginationForChannelService(channelId, channelName, startTime, endTime, cpn(pageNo), CookieUtils.getPageSize(request));
+        model.addAttribute("pagination", pagination);
+
+        return "commerce/channel-list";
+    }
+
+    @RequestMapping("/channel-local/v_add.do")
+    public String add(HttpServletRequest request, ModelMap model){
+        List<Channel> channelList = new ArrayList<>();
+        Long channelId = sessionUtil.getChannelId(request);
+        Long commerceId = sessionUtil.getCommerceId(request);
+        if (null != channelId){
+            channelList.add(channelService.getChannelByChannelId(channelId));
+        } else if (null == commerceId){
+            channelList = channelService.getAllChannel();
+        }
+
+        model.addAttribute("channelList", channelList);
+        List<BankPayInfo> bankPayInfoList = channelService.getAllBankPayInfo();
+        model.addAttribute("bankPayInfoList",bankPayInfoList);
+
+        return "commerce/add-channel";
+    }
+
+    @RequestMapping("/channel-local/v_check_channel_name.do")
+    public String checkUsername(String channelId,String channelName, HttpServletRequest request,
+                                HttpServletResponse response) {
+        logger.info("channelId=" + channelId);
+        Channel channelOriginal = null;
+        if(channelId!=null){
+            channelOriginal = channelService.getChannelByChannelId(Long.parseLong(channelId));
+        }
+        Channel channel = channelService.getChannelByChannelName(channelName);
+        if (StringUtils.isBlank(channelName) || (channelOriginal ==null&&channel!=null) ||(channelOriginal !=null && (!channelOriginal.getChannelName().equals(channelName))&&(channel!=null)) ){
+            ResponseUtils.renderJson(response, "false");
+        } else {
+            ResponseUtils.renderJson(response, "true");
+        }
+        return null;
+    }
+
+    @RequestMapping("/channel-local/o_save.do")
+    public String saveLocalChannel(Channel bean,HttpServletRequest request, ModelMap model,HttpServletResponse response){
+
+            logger.info("parent channel id =" + bean.getId());
+            bean.setChannelId(sequenceDao.getChannelId());
+            bean.setCreateDate(new Date());
+            logger.info("parent id =" + bean.getChanParentId().getId());
+            logger.info("status ==" + bean.getStatus() + "," + bean.getCollaborateStartTime() + "-" + bean.getCollaborateEndTime());
+            channelService.saveChannel(bean);
+
+            long adminId = (long)session.getAttribute(request,"_admin_id_key");
+            logger.info("adminId = " + adminId);
+            Admin admin = adminMng.findById(adminId);
+            operationLogService.addChannel(admin.getUsername(), bean.getChannelId(), bean.getChannelId());
+
+            return "redirect:v_list.do";
+    }
+
+    @RequestMapping("/channel-local/v_edit.do")
+    public String editLocalChannel(String id,HttpServletRequest request, ModelMap model){
+
+        Channel viewChannel = channelService.getChannelByChannelId(Long.parseLong(id));
+
+        List<Channel> channelList = new ArrayList<>();
+        Long channelId = sessionUtil.getChannelId(request);
+        Long commerceId = sessionUtil.getCommerceId(request);
+        if (null != channelId){
+            channelList.add(channelService.getChannelByChannelId(channelId));
+        } else if (null == commerceId){
+            channelList = channelService.getAllChannel();
+        }
+        model.addAttribute("channelList", channelList);
+
+        List<BankPayInfo> bankPayInfoList = channelService.getAllBankPayInfo();
+        model.addAttribute("bankPayInfoList",bankPayInfoList);
+
+        model.addAttribute("channel", viewChannel);
+
+        return "commerce/edit-channel";
+    }
+
+
+    @RequestMapping("/channel-local/o_update_channel.do")
+    public String updateLocalChannel(Channel bean,HttpServletRequest request, ModelMap model,HttpServletResponse response){
+
+        logger.info("parent channel id ="+bean.getId());
+
+        Channel channel = channelService.getChannelByChannelId(bean.getId());
+
+        long adminId = (long)session.getAttribute(request,"_admin_id_key");
+        logger.info("adminId = " + adminId);
+        Admin admin = adminMng.findById(adminId);
+        operationLogService.editChannel(admin.getUsername(), channel.getChannelId(), channel.getChannelId());
+
+        {
+            if (channel == null) {
+                channel = new Channel();
+                channel.setChannelId(sequenceDao.getChannelId());
+            }
+        }
+        channel.setCreateDate(new Date());
+        channel.setChannelName(bean.getChannelName());
+        channel.setStatus(bean.getStatus());
+        channel.setCollaborateStartTime(bean.getCollaborateStartTime());
+        channel.setCollaborateEndTime(bean.getCollaborateEndTime());
+        channel.setBankPayInfoId(bean.getBankPayInfoId());
+
+        Channel parChannel = channelService.getChannelByChannelId(bean.getChanParentId().getId());
+        if (parChannel != null) {
+            channel.setChanParentId(parChannel);
+            //channel.setChanParentRela(parChannel);
+        }
+
+        logger.info("parent id =" + bean.getChanParentId().getId());
+
+        logger.info("status ==" + bean.getStatus() + "," + bean.getCollaborateStartTime() + "-" + bean.getCollaborateEndTime());
+
+        channelService.saveChannel(channel);
+
+        return "redirect:v_list.do";
+    }
+
+
+    @RequestMapping("/channel-local/o_delete.do")
+    public String deleteChannels(String[] ids, Integer pageNo,
+                         HttpServletRequest request, ModelMap model) {
+        logger.info("ids =="+ids[0]);
+        Channel[] beans = channelService.deleteByIds(ids);
+        for (Channel bean : beans) {
+            logger.info("delete channel, id={} = "+bean.getId());
+        }
+        return channelPagination("", null, null, pageNo, request, model);
+    }
+
+    @RequestMapping("/channel-local/channel_user_list.do")
+    public String channelUserList(String id,HttpServletRequest request,Integer pageNo,HttpServletResponse response, ModelMap model){
+
+       /* Pagination pagination = userMng.getAllUsersByChannelId(id,cpn(pageNo),CookieUtils.getPageSize(request));
+        model.addAttribute("pagination", pagination);*/
+
+        List<BankPayInfo> bankPayInfoList = channelService.getAllBankPayInfo();
+        model.addAttribute("bankPayInfoList",bankPayInfoList);
+        model.addAttribute("channelId",id);
+
+        String commerceId = null;
+
+        logger.info("channel id =="+id);
+
+        Pagination pagination = shopAdminMng.getPageForChannelOnly(id,commerceId,SiteUtils.getWebId(request), cpn(pageNo), CookieUtils.getPageSize(request));
+        model.addAttribute(pagination);
+
+        return "commerce/channel-user-list";
+    }
+
+
+    @RequestMapping("/channel-local/v_add_channel_user.do")
+    public String addForChannel(String channelId,ModelMap model,HttpServletRequest request) {
+
+        //List<Role> roleList = roleMng.getList();
+        List<Role> roleList = new ArrayList<Role>();
+        roleList.add(roleMng.findById(3));//新增渠道Role
+        model.addAttribute("roleList", roleList);
+
+        Integer[] roleIds= {3};
+
+        model.addAttribute("roleIds", roleIds);
+
+        logger.debug("channelId =="+channelId);
+        model.addAttribute("channelId",channelId);
+        List<Channel> channelList = channelService.getAllChannel();
+        Channel chan = new Channel();
+        chan.setId(Long.parseLong("-1"));
+        chan.setChannelName("请选择");
+        channelList.add(0,chan);
+
+
+        List<Commerce> commerceList = commerceService.getAllCommerces();
+        Commerce com = new Commerce();
+        com.setId(new Long(-1));
+        com.setName("请选择");
+        commerceList.add(0,com);
+
+        model.addAttribute("channelList", channelList);
+        model.addAttribute("commerceList", commerceList);
+
+        java.util.ArrayList<HashMap<String,Object>> storeFrontList = new ArrayList<HashMap<String,Object>>();
+
+        java.util.HashMap<String,Object> storeFrontObject = new HashMap<String,Object>();
+        storeFrontObject.put("id"," ");
+        storeFrontObject.put("name","无");
+        storeFrontList.add(storeFrontObject);
+
+        java.util.HashMap<String,Object> storeFrontObject1 = new HashMap<String,Object>();
+        storeFrontObject1.put("id","store1");
+        storeFrontObject1.put("name","店面1");
+        storeFrontList.add(storeFrontObject1);
+
+        model.addAttribute("storeFrontList",storeFrontList);
+
+
+
+        return "commerce/channel_user_add";
+    }
+
+    @ResponseBody
+    @RequestMapping("/channel-local/o_save_channel_user.do")
+    public String save(ShopAdmin bean, String username, String password,Boolean viewonlyAdmin,String storeFront,
+                       String email, Boolean disabled,Integer[] roleIds,String channelId,String commerceId,
+                       HttpServletRequest request, ModelMap model) {
+
+        try {
+            Website web = SiteUtils.getWeb(request);
+            String channelName = null;
+            String commerceName = null;
+
+            if ((!"".equals(commerceId))&&commerceId!=null) {
+                logger.debug("commerceId = " + commerceId);
+                Commerce commerceIndex = commerceService.getCommerceById(Long.parseLong(commerceId));
+                if (commerceIndex != null) {
+                    logger.info("set value to commerce name");
+                    commerceName = commerceIndex.getName();
+                }
+
+
+            }
+            logger.info("channel id ==" + channelId);
+            if ((!"".equals(channelId))) {
+
+                Channel channelIndex = channelService.getChannelByChannelId(Long.parseLong(channelId));
+
+                logger.info("channel == null?" + (channelIndex == null));
+
+                if (channelIndex != null) {
+                    logger.info("set value to channel name");
+                    channelName = channelIndex.getChannelName();
+                }
+
+            }
+            bean = shopAdminMng.register(username, password, viewonlyAdmin, email, request.getRemoteAddr(), disabled, web.getId(), bean, channelId, channelName, commerceId, commerceName,storeFront);
+            adminMng.addRole(bean.getAdmin(), roleIds);
+            logger.info("save ShopAdmin id={}" + bean.getId());
+
+            long adminId = (long)session.getAttribute(request,"_admin_id_key");
+            logger.info("adminId = " + adminId);
+            Admin admin = adminMng.findById(adminId);
+            operationLogService.addUserForChannel(admin.getUsername(), bean.getId() + "", channelId);
+
+
+            return "success";
+        }catch (Exception e){
+            logger.error("",e);
+            return "fail";
+        }
+
+       // return "redirect:channel_user_list.do?id="+channelId;
+    }
+
+    @RequestMapping("/channel-local/o_edit_channel_user.do")
+    public String editChannelUser(String channelId,long id,HttpServletRequest request,HttpServletResponse response, ModelMap model){
+
+        logger.info("id =="+id+",channel id =="+channelId);
+       // List<Role> roleList = roleMng.getList();
+        List<Role> roleList = new ArrayList<Role>();
+        roleList.add(roleMng.findById(3));//新增渠道Role
+
+        model.addAttribute("admin", shopAdminMng.findById(id));
+        model.addAttribute("channelId",channelId);
+        //model.addAttribute("roleIds", shopAdminMng.findById(id).getAdmin().getRoleIds());
+        model.addAttribute("roleList", roleList);
+        Integer[] roleIds= {3};
+        model.addAttribute("roleIds",roleIds);
+
+        java.util.ArrayList<HashMap<String,Object>> storeFrontList = new ArrayList<HashMap<String,Object>>();
+        java.util.HashMap<String,Object> storeFrontObject = new HashMap<String,Object>();
+        storeFrontObject.put("id"," ");
+        storeFrontObject.put("name","无");
+        storeFrontList.add(storeFrontObject);
+
+        java.util.HashMap<String,Object> storeFrontObject1 = new HashMap<String,Object>();
+        storeFrontObject1.put("id","store1");
+        storeFrontObject1.put("name","店面1");
+        storeFrontList.add(storeFrontObject1);
+
+        model.addAttribute("storeFrontList",storeFrontList);
+
+        return "commerce/channel_user_edit";
+    }
+
+    @ResponseBody
+    @RequestMapping("/channel-local/o_update_channel_user.do")
+    public String update(ShopAdmin bean, String password, Boolean viewonlyAdmin,String storeFront,String email,HttpServletResponse response,
+                         Boolean disabled, Integer[] roleIds, Integer pageNo,String channelId,String commerceId,
+                         HttpServletRequest request, ModelMap model) {
+        try {
+            long adminId = (long)session.getAttribute(request,"_admin_id_key");
+            logger.info("adminId = " + adminId);
+            Admin admin = adminMng.findById(adminId);
+            operationLogService.editUserForChannel(admin.getUsername(), bean.getId() + "", channelId);
+
+            logger.info("storeFront="+storeFront);
+            String channelName = "";
+            String commerceName = "";
+            if ((!"".equals(commerceId))&&commerceId!=null) {
+                logger.debug("commerceId = " + commerceId);
+                Commerce commerceIndex = commerceService.getCommerceById(Long.parseLong(commerceId));
+                if (commerceIndex != null) {
+                    logger.info("set value to commerce name");
+                    commerceName = commerceIndex.getName();
+                }
+
+
+            }
+            logger.info("channel id ==" + channelId);
+            if ((!"".equals(channelId))&&channelId!=null) {
+
+                Channel channelIndex = channelService.getChannelByChannelId(Long.parseLong(channelId));
+
+                logger.info("channel == null?" + (channelIndex == null));
+
+                if (channelIndex != null) {
+                    logger.info("set value to channel name");
+                    channelName = channelIndex.getChannelName();
+                }
+
+            }
+            bean = shopAdminMng.update(bean, password, disabled, email, viewonlyAdmin, channelId, channelName, commerceId, commerceName,storeFront);
+            adminMng.updateRole(bean.getAdmin(), roleIds);
+            logger.info("update ShopAdmin id={}." + bean.getId());
+            return "success";
+        }catch (Exception e){
+          return "fail";
+        }
+        //return  channelUserList(channelId,request,pageNo,response,model);
+    }
+    @RequestMapping("/channel-local/o_delete_channel_user.do")
+    public String delete(Long[] ids, Integer pageNo,String channelId,HttpServletResponse response,
+                         HttpServletRequest request, ModelMap model) {
+        String idCombinations = "";
+        for (int i=0;i<ids.length;i++){
+            if(i== ids.length-1){
+                idCombinations +=ids[i]+" ";
+            }else {
+                idCombinations +=ids[i]+",";
+            }
+        }
+        long adminId = (long)session.getAttribute(request,"_admin_id_key");
+        logger.info("adminId = " + adminId);
+        Admin admin = adminMng.findById(adminId);
+        operationLogService.delUserForChannel(admin.getUsername(), idCombinations, channelId);
+
+        ShopAdmin[] beans = shopAdminMng.deleteByIds(ids);
+        for (ShopAdmin bean : beans) {
+            logger.info("delete ShopAdmin id={}"+ bean.getId());
+        }
+        return channelUserList(channelId, request, pageNo, response, model);
+    }
+
+
+    @RequestMapping("/channel-local/client_user_list.do")
+    public String clientUserList(String id,HttpServletRequest request,Integer pageNo,HttpServletResponse response, ModelMap model){
+
+        String commerceId = null;
+
+        logger.info("channel id =="+id);
+
+        Pagination pagination = memberUserService.getPageForClientUser(id,commerceId, null, null, null, null, null, SiteUtils.getWebId(request), cpn(pageNo), CookieUtils.getPageSize(request));
+
+        model.addAttribute(pagination);
+
+        return "commerce/client-user-list";
+    }
+
+    @RequestMapping(value = "channelToXls.do")
+    public void channelToElx(String channelName, HttpServletRequest request, HttpServletResponse response,String startTime,String endTime){
+        logger.info("channelName =" + channelName + ",startTime =" + startTime + ",endTime=" + endTime);
+        Long channelId = sessionUtil.getChannelId(request);
+        try {
+            List<Channel> channels = channelService.getChannelToExcel(channelName, channelId,startTime,endTime);
+            OutputStream outputStream = response.getOutputStream();
+            response.setHeader("Content-disposition", "attachment; filename="+new String("渠道".getBytes("GB2312"),"8859_1")+".xls");
+            //定义输出类型为excel
+            response.setContentType("application/msexcel");
+
+            ExcelUtils<Channel> excelUtils = new ExcelUtils<Channel>();
+            List<String[]> list = new ArrayList<String[]>();
+            String[] a1 = {"渠道ID", "id"};
+            list.add(a1);
+            String[] a2 = {"渠道编号", "channelId"};
+            list.add(a2);
+            String[] a3 = {"渠道名称", "channelName"};
+            list.add(a3);
+            String[] a4 = {"创建时间", "createDate"};
+            list.add(a4);
+            excelUtils.toExcelAjax(list, channels, outputStream);
+        } catch (Exception e) {
+            logger.error("导出渠道失败！", e);
+        }
+    }
+
+    @RequestMapping(value = "/channel-local/downloadChannelDemo.do")
+    public void downloadDemo(HttpServletResponse response) {
+        try {
+            OutputStream outputStream = response.getOutputStream();
+
+            response.setHeader("Content-disposition", "attachment; filename=" + new String("channelDemo".getBytes("GB2312"), "8859_1") + ".xlsx");
+            response.setContentType("application/msexcel");
+
+            String rootPath = getClass().getResource("/").getFile().toString();
+            String[] pa = rootPath.split("\\/");
+            StringBuffer fileToPath = new StringBuffer();
+            for (int i = 1; i < pa.length-1; i++) {
+                fileToPath.append(pa[i]).append("/");
+            }
+            fileToPath.append("download/channelDemo.xlsx");
+            File file = new File(fileToPath.toString());
+            FileInputStream fis = new FileInputStream(file);
+            BufferedInputStream buff = new BufferedInputStream(fis);
+            byte[] b = new byte[1024];
+            long k = 0;
+            while (k < file.length()) {
+                int j = buff.read(b, 0, 1024);
+                k += j;
+                outputStream.write(b, 0, j);
+            }
+            outputStream.close();
+        } catch (IOException e) {
+            logger.error("", e);
+        }
+    }
+
+    @RequestMapping(value = "/channel-local/importChannel.do")
+    public String importCommerce(Model model){
+        List<Channel> channelList = channelService.getAllChannel();
+        model.addAttribute("channelList", channelList);
+
+        List<BankPayInfo> bankPayInfoList = channelService.getAllBankPayInfo();
+        model.addAttribute("bankPayInfoList",bankPayInfoList);
+
+        return "commerce/import-channel";
+    }
+
+    @RequestMapping(value = "/channel-local/import_channel_save.do")
+    public String saveChannels(@RequestParam(value = "file", required = false) MultipartFile file, Channel bean,HttpServletRequest request){
+        try {
+            channelService.saveChannelFromFile(file, bean,request);
+        } catch (Exception e){
+            logger.error("", e);
+            return "redirect:v_list.do";
+        }
+        return "redirect:v_list.do";
+    }
+
+    @Resource
+    private SessionUtil sessionUtil;
+
+    @Autowired
+    private LogisticsMng logisticsMng;
+
+    @Autowired
+    private UserMng userMng;
+
+    @Autowired
+    private AdminMng adminMng;
+
+    @Autowired
+    private ShopAdminMng shopAdminMng;
+
+    @Autowired
+    private RoleMng roleMng;
+
+    @Autowired
+    private MemberUserService memberUserService;
+}

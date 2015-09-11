@@ -1,0 +1,113 @@
+@charset "utf-8";
+.clearfix:after{display:block;content:"\200B";clear:both;height:0px;}
+.clearfix{*zoom:1;}
+.body{
+	width:1080px;
+	height:1920px;
+	margin:0 auto;!important; height:100% !important;
+	}
+.ico{
+	background-image:url(image/icon.png);
+	 background-repeat:none;
+	}
+.ico-1{
+	background-image:url(image/ico1.png);
+	background-repeat:none;
+	}
+.frame{
+	width:1080px;
+	height:1920px;
+	background:#3e4556;
+	}
+/**************以上通用***************/
+.header{
+	width:1000px;
+	height:130px;
+	margin-left:0px;
+	}
+.float{	float:left;	}
+.h1{
+	font-family:"微软雅黑";
+	font-size:90px;
+	font-weight:bold;
+	color:#FFF;
+	margin-left:130px;
+	}
+.h2{
+	font-family:"微软雅黑";
+	font-size:60px;
+	color:#35b15c;
+	font-weight:bold;
+	width:250px;
+	margin-top:-118px;
+	margin-left:220px;
+	}
+.h3{
+	font-family:"微软雅黑";
+	font-size:24px;
+	color:#999;
+	margin-left:40px;
+	margin-top:40px;
+	}
+.h4{
+	font-family:"微软雅黑";
+	font-size:26px;
+	color:#999;
+	margin-left:73px;
+	margin-top:-170px;
+	}
+.return{
+	margin-left:20px;
+	margin-top:0px;
+	width:115px;
+	height:115px;
+	background-position:-211px -205px;
+	}
+.down{
+	margin-left:940px;
+	margin-top:20px;
+	width:115px;
+	height:115px;
+	background-position:-376px -205px;
+	}
+/**************以上是header***************/
+.center{ width:1000px;	height:1160px;	margin-left:40px;	margin-top:20px; }
+.top{ width:1000px; height:203px; background-color:#5b616f;}
+.bt{ width:155px; height:155px; margin-left:6%;background-position:-50px -45px;}
+.qr{ width:155px; height:155px; margin-left:6%;background-position:-50px -200px;}
+.row-share{ width:155px; height:155px; margin-left:6%;background-position:-50px -354px;}
+.share-transfers{ width:155px; height:155px; margin-left:6%;background-position:-50px -509px;}
+.branch-in-line{ width:155px; height:155px; margin-left:6%;background-position:-50px -663px;}
+.win-ying{ width:155px; height:155px; margin-left:6%;background-position:-50px -818px;}
+.banking-phone{ width:155px; height:155px; margin-left:6%;background-position:-50px -973px;}
+.share-zhzf{ width:155px; height:155px; margin-left:6%;background-position:-50px -1128px;}
+.bt-wz1{width:210px; height:40px; font-family:"微软雅黑"; margin-top:27px; font-size:30px; font-weight:bold; color:#FFF;}
+.bt-wz2{width:720px; height:40px; font-family:"微软雅黑"; margin-top:5px; font-size:16px; color:#FFF;}
+/**************以上是center***************/
+.video{width:1000px; height:680px;  margin-top:20px;}
+/**************以上是视频窗口***************/
+.list{width:1000px; height:170px; background-color:#5b616f;}
+.item{width:155px; height:105px; background-color:#CCC; margin-top:10px; margin-left:10px; text-align:center;}
+.items{ color:#FFF; font-family:"微软雅黑", Arial; font-size:15px; text-align:center;}
+/**************以上是视频列表***************/
+.footer{ width:995px; height:460px; margin-top:40px; margin-left:45px; }
+.row{ width:990px;	height:220px; }
+.gn-bg{	width:165px; height:165px;	}
+.gn-1{	background-position:-22px -365px;	}
+.gn-2{	background-position:-187px -365px;	}
+.gn-3{	background-position:-352px -365px;	}
+.gn-4{	background-position:-517px -365px;	}
+.gn-5{	background-position:-682px -365px;	}
+.gn-6{	background-position:-847px -365px;	}
+.gn-wz{ width:115px; font-family:"微软雅黑", Arial;font-size:18px;	color:#FFF;	margin-left:-118px;	margin-top:135px;}
+.two-row{ width:1000px;	height:220px;	margin-top:-50px;	}
+.gn-7{background-position:-22px -513px;	}
+.gn-8{	background-position:-187px -513px;	}
+.gn-9{	background-position:-352px -513px;	}
+.gn-10{	background-position:-517px -513px;	}
+.gn-11{	background-position:-682px -513px;	}
+.gn-12{	background-position:-847px -513px;	}
+.gn-wz2{width:115px; font-family:"微软雅黑";	font-size:18px;	color:#FFF;	margin-left:-118px;	margin-top:153px;}
+/**************以上是footer***************/
+/* CSS Document */
+

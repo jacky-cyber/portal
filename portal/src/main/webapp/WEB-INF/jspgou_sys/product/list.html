@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/1999/html">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title></title>
+<#include "/jspgou_sys/head.html"/>
+<script type="text/javascript">
+function optDelete() {
+	if(Pn.checkedCount('ids')<=0) {
+		alert("<@s.m 'error.checkRecord'/>");
+		return;
+	}
+	if(!confirm("<@s.m 'global.confirm.delete'/>")) {
+		return;
+	}
+	var f = document.getElementById('tableForm');
+	f.action="o_delete.do";
+	f.submit();
+}
+
+function getTableForm(){
+	return document.getElementById("tableForm");
+}
+    function check(val){
+
+        if("" == val ){
+            alert("未绑定商家;请先绑定！");
+            return false;
+        }else{
+            if(confirm('确定上架')){
+                return true;
+            }
+        }
+
+    }
+$(document).ready(function(){
+    $("table tr").mousemove(function(){
+        $(this).css({"background-color":"#84ccc9"});
+    });
+    $("table tr").mouseout(function(){
+        $(this).css({"background-color":"white"});
+    });
+});
+</script>
+</head>
+<body>
+<div class="body-box">
+<div class="rhead">
+	<div class="rpos"><@s.m "global.position"/>: <@s.m "shop.function.product"/> - <@s.m "product.function"/> - <@s.m "global.list"/></div>
+	<form class="ropt">
+		<#if category??>
+		<input type="hidden" name="ctgId" value="${category.id}"/>
+		<input type="submit" value="<@s.m "global.add"/>" onclick="this.form.action='v_add.do';"/>
+		<#else>
+		<div style="padding:5px 0 0 0"><@s.m "product.selectCategory"/></div>
+		</#if>
+	</form>
+	<div class="clear"></div>
+</div>
+<div class="rhead">
+	<form action="v_list.do">
+	 <select name="typeId">
+            <option value="">--商品分类--</option>
+         <#list typeList as productType>
+            <option value="${productType.id}"<#if typeId??> <#if typeId==productType.id>selected="selected"</#if></#if>>${productType.name!}</option>
+         </#list>  
+       </select>
+	<@s.m "product.name"/>:<input type="text" name="productName" value="${productName!}" style="width:100px"/>
+        商品ID:<input type="text" name="productId" value="${productId!}" style="width:100px"/>
+        渠道名称: <input type="text" name="channelName" value="${channelName!}" style="width:100px"/>
+
+        商户名称: <input type="text" name="commerceName" value="${commerceName!}" style="width:100px"/>
+        商品属性: <select  name="productStamp"  style="width:100px"/>
+        <#list stampList as stamps>
+            <option value="${stamps.id!}"<#if productStamp??> <#if productStamp==stamps.id>selected="selected"</#if></#if>>${stamps.name!}</option>
+        </#list>
+        </select>
+    <label class="ckl">
+        <@s.m "product.onSale"/>
+        <select  name="isOnSale"  style="width:100px"/>
+        <option value="">无</option>
+            <option value="true" <#if isOnSale??> <#if isOnSale==true>selected="selected"</#if></#if> >已上架</option>
+            <option value="false"<#if isOnSale??> <#if isOnSale==false>selected="selected"</#if></#if> >已下架</option>
+
+        </select>
+	    <!--<input type="checkbox" id="isOnSale" name="isOnSale" value="true" <#if isOnSale?? && isOnSale> checked="checked"</#if>/><@s.m "product.onSale"/>-->
+    </label>
+    <!--<label class="ckl">-->
+	     <!--<input type="checkbox" id="isRecommend" name="isRecommend" value="true" <#if isRecommend?? && isRecommend> checked="checked"</#if>/><@s.m "product.recommend"/>-->
+    <!--</label>-->
+    <!--<label class="ckl">-->
+	      <!--<input type="checkbox" id="isSpecial" name="isSpecial" value="true" <#if isSpecial?? && isSpecial> checked="checked"</#if>/><@s.m "product.special"/>-->
+    <!--</label>-->
+    <!--<label class="ckl">-->
+	     <!--<input type="checkbox" id="isHotsale" name="isHotsale" value="true" <#if isHotsale?? && isHotsale> checked="checked"</#if>/> 热卖-->
+    <!--</label>-->
+    <!--<label>-->
+	    <!--<input type="checkbox" id="isNewProduct" name="isNewProduct" value="true"<#if isNewProduct?? && isNewProduct> checked="checked"</#if> /> 新品-->
+     <!--</label>-->
+	  库存:
+	    <input type="text" name="startStock" value="${startStock!}" style="width:50px"/>
+	    &nbsp;至&nbsp;<input type="text" name="endStock" value="${endStock!}" style="width:50px"/>
+      创建日期:<input type="text" name="startTime" value="${startTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:100px"/>&nbsp;至&nbsp;<input type="text" name="endTime" value="${endTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:100px"/>
+
+        <input type="submit"  class="ropt" value="<@s.m "global.query"/>" />
+	</form>
+	<div class="clear"></div>
+</div>
+<form id="tableForm" method="post">
+<input type="hidden" name="pageNo" value="${pageNo!}"/>
+<input type="hidden" name="ctgId" value="${ctgId!}"/>
+<@p.table value=pagination;product,i,has_next><#rt/>
+	<@p.column title="<input type='checkbox' onclick='Pn.checkbox(\"ids\",this.checked)'/>" width="20">
+		<input type='checkbox' name='ids' value='${product.id}'/><#t/>
+	</@p.column><#t/>
+	<@p.column title="ID" width="50">${product.id!}</@p.column><#t/>
+	<@p.column code="product.name" width="15%"><a title="${product.name}" href="${product.url}" target="_blank">${product.name}</a></@p.column><#t/>
+    <@p.column code="product.channel">${product.channelName!}</@p.column><#t/>
+    <@p.column code="product.commerce"width="15%"><a title="${product.commerceName!}" target="_blank">${product.commerceName!}</@p.column><#t/>
+	<@p.column code="product.category">${product.category.name}</@p.column><#t/>
+	<!--<@p.column code="product.type">${product.type.name}</@p.column><#t/>-->
+    <@p.column code="product.productStamp"><#if product.productStamp==1>本地商品
+                                   <#elseif product.productStamp==2>虚拟商品
+                                   <#elseif product.productStamp==3>商城商品
+                                   <#elseif product.productStamp==4>金融商品
+                                   <#else >
+                                    </#if></@p.column><#t/>
+
+	<@p.column code="一拍价格"><#if product.productFashion??>${product.productFashion.scanningPrice!}<#else>${product.scanningPrice!}</#if></@p.column><#t/>
+	<@p.column code="product.stockCount">${product.stockCount}</@p.column><#t/>
+	<!--<@p.column code="product.brand"><#if product.brand??>${(product.brand.name)!}</#if></@p.column><#t/>-->
+    <@p.column code="product.createTime">${(product.createTime)!}</@p.column><#t/>
+	<!--<@p.column code="product.onSale"><#if product.onSale><@s.m "global.true"/><#else><@s.m "global.false"/></#if></@p.column><#t/>-->
+	<@p.column code="global.operate" >
+	   <a href="v_edit.do?id=${product.id}&pageNo=${pageNo!}&ctgId=${(product.category.id)!}"><@s.m "global.edit"/></a> | <#rt/>
+	   <a href="o_delete.do?ids=${product.id}&pageNo=${pageNo!}&ctgId=${(product.category.id)!}" onclick="if(!confirm('<@s.m "global.confirm.delete"/>')) {return false;}"><@s.m "global.delete"/></a> | <#rt/>
+           <#if product.onSale >
+               <a href="o_checked.do?productId=${product.id}&type=3&pageNo=${pageNo!}&ctgId=${(product.category.id)!}" onclick="if(!confirm('确定下架？')) {return false;}">下架</a>  <#rt/>
+               <#else>
+                   <a href="o_checked.do?productId=${product.id}&type=2&pageNo=${pageNo!}&ctgId=${(product.category.id)!}" onclick="if(!check('${product.channelId!}')){return false;}">上架</a>  <#rt/>
+           </#if>
+       <!--<a href="../favorable/v_list.do?productId=${product.id!}&channelId=${product.channelId!}">优惠策略</a> | <#rt/>-->
+       <!--<#if product.commerceId?? >-->
+       <!--<#else>-->
+           <!--<a href="v_bind_commerce.do?id=${product.id}&pageNo=${pageNo!}&ctgId=${(product.category.id)!}">绑定商家</a> <#t/>-->
+       <!--</#if>-->
+
+	</@p.column><#t/>
+</@p.table>
+<div><input type="button" value="<@s.m "global.delete"/>" onclick="optDelete();"/></div>
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+</html>

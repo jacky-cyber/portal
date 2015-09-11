@@ -1,0 +1,118 @@
+@charset "utf-8";
+
+/*
+Description：layout for mobile client
+Author: Li Wenbin
+***********************/
+.fixed{ position: fixed; top:0px; z-index: 999; }
+.mt51{ margin-top: 51px !important;}
+body {
+	font-size: 14px;
+	font-family: "微软雅黑";
+	padding: 0px;
+	margin: 0 auto;
+	color: #666666;
+	background-color:#f9f9f9;
+	
+}
+header{ height: 40px; padding:10px 2%; color: #eeeeee; background:url(../../images/top_bg.jpg) repeat; }
+header ul{ list-style: none ; margin: 0px; padding: 0px;}
+header ul li{ display: list-item; margin: 0px; padding: 0px;  }
+a {
+	text-decoration: none;
+	color: #ffd401;
+	outline: none;
+}
+
+.h_logo{
+	 width: 150px; padding-top: 7px;font-family:华文新魏;font-size:26px;font-weight:bold;font-style:normal; color:#f9e313; text-shadow:#000 1px 1px 1px;
+}
+.h_logo span a{ display: inline-block;margin-bottom: 6px;}
+
+.h_city{
+	width: 150px; padding-top: 15px;color: white; font-size: 13px; font-weight:bold;
+}
+.h_city img{ vertical-align:middle; position:relative;top:-2px;} 
+.paint {
+	width: 55px;
+	padding-right: 5px;
+	text-align: right;
+}
+
+/*nav{ padding: 0; background: url(../../images/nav_bj_new.png) repeat-x; background-size: auto 42px; }*/
+nav{ padding: 0; background: url(../../images/tb_bg.jpg) repeat-x; background-size: auto 42px; }
+.tab_nav{ height: 41px;color: #000000; line-height: 28px; text-align: center; }
+.tab_nav ul{list-style: none; display: block;  margin: 0px; padding: 0px;
+}
+.tab_nav ul li{display: list-item; margin: 0px; padding-top: 10px; }
+.tab_nav li a {
+	width: 74px;
+	text-align: center;
+	display: block;
+	height: 31px;
+	color: #fff;
+}
+
+.tab_nav li a.oaClick {
+	background: url(../../images/nav_bj.png) center no-repeat;
+	background-size: 82px 31px;
+	color: #5a5b5d;
+	text-shadow: 0px 0px 0px #fff;
+}
+
+.tab_nav_one {
+	padding: 0px;
+	line-height: 42px;
+	font-family:微软雅黑;
+	/*padding-left:15px;*/
+}
+
+
+.tab_nav_one .Hide {
+	display: block;
+	text-align: center;
+	font-family:微软雅黑;font-size:17px;font-weight:bold;font-style:normal;
+	width: 80%;
+	color:#fff;
+}
+
+.tab_nav_one img {
+	margin: 13px 0px 0px 10px;
+}
+
+article{
+	margin: 0px; padding: 0px;
+}
+
+footer{
+	 margin: 0px; padding: 0px; margin-top:10px;
+	
+
+}
+.foot {
+	background-image:-webkit-gradient(linear, left top, left bottom, from(#f5f5f5), to(#f1f1f1));
+	background-image:-webkit-linear-gradient(#f5f5f5, #f1f1f1);
+	background-image:-moz-linear-gradient(#f5f5f5, #f1f1f1);
+	background-image:-ms-linear-gradient(#f5f5f5, #f1f1f1);
+	background-image:-o-linear-gradient(#f5f5f5, #f1f1f1);
+	background-image:linear-gradient(#f5f5f5, #f1f1f1);
+	border:1px solid #dbd8d8;
+	/*box-shadow: 0px 1px 0px #f2f1f6 Inset;*/
+	
+	height: 38px;
+	font-family: "微软雅黑";
+	font-size: 14px;
+	color: #666666;
+	
+	outline: none;
+	display: block;
+	
+	line-height: 38px;
+	padding:0 20px;
+	
+}
+.foot a{ color:#3a6784; display:inline-block; margin:0 6px;}
+
+.topdirection  
+{  width:0;height:0; font-size:0px; margin-bottom:8px;  line-height:0;  border-width:4px;  border-style:solid;  border-color: transparent transparent #9a9a9a transparent; vertical-align:middle;}
+

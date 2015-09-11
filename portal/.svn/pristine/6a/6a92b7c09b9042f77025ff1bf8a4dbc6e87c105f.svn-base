@@ -1,0 +1,100 @@
+package com.jspgou.cms.manager;
+
+import com.ifunpay.portal.entity.MemberUserEntity;
+import com.jspgou.cms.entity.Cart;
+import com.jspgou.cms.entity.Order;
+import com.jspgou.cms.entity.ShopMember;
+import com.jspgou.common.page.Pagination;
+
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+/**
+* This class should preserve.
+* @preserve
+*/
+public interface OrderMng {
+
+	public void  updateSaleCount(Long id);
+	
+	public void  updateliRun(Long id);
+	
+	public List<Order> getlist();
+	
+	public void abolishOrder();
+	
+	public Pagination getPageForOrderReturn(Long memberId, int pageNo, int pageSize);
+	//生成订单
+	public Order createOrder(Cart cart,Long[] cartItemId, Long shippingMethodId,Long deliveryInfo,Long paymentMethodId,
+			String comments, String ip,ShopMember member, Long webId,String memberCouponId);
+    //生产订单-一拍支付
+    public Order createOrderForAShoot(MemberUserEntity memberUserEntity,String terminalId,Long[] cartItemId, Long shippingMethodId,Long deliveryInfo,Long paymentMethodId,
+                             String comments, String ip,ShopMember member,String memberCouponId,int quantity,String serialNo);
+
+	public Pagination getPageForMember(Long memberId, int pageNo, int pageSize);
+	
+	public Pagination getPageForMember2(Long memberId, int pageNo, int pageSize);
+	
+	public Pagination getPageForMember1(Long memberId, int pageNo, int pageSize);
+
+	public Pagination getPageForMember3(Long memberId, int pageNo, int pageSize) ;
+	
+	public Pagination getPage(String channelName,String commerceName,String phone,String channelId,String commerceId,Long webId,Long memberId,String productName,String userName,Long paymentId,Long shippingId,
+			Date startTime,Date endTime,Double startOrderTotal,Double endOrderTotal,Integer status,Integer paymentStatus,Integer shippingStatus,String code,int pageNo, int pageSize);
+
+	public Pagination getPageForNewOrder(Long channelId,Long commerceId,String code,String phone,String channelName,String commerceName,String productName,String startTime,String endTime,String payMethod,String paymentStatus,String shippingStatus,String status,int pageNo, int pageSize);
+
+    public java.util.List<Order> getAllOrderToExcel(String channelName,String commerceName,String productName,String phone,String channelId,String commerceId,
+                                                 Long paymentId,  Date startTime,Date endTime, Integer status,Integer paymentStatus,Integer shippingStatus,String code);
+
+        /**
+         * get Pagination For Voucher
+         * @param status
+         * @param code
+         * @param pageNo
+         * @param pageSize
+         * @return
+         */
+    public Pagination getPageForVoucher(Long channelId,Long commerceId,String recepPhone,String productName,String commerceName,String voucherCode,String status,String code,int pageNo, int pageSize);
+
+	public Pagination getPage(Long webId,Long memberId,String productName,String userName,Long paymentId,Long shippingId, 
+			Date startTime,Date endTime,Double startOrderTotal,Double endOrderTotal,Integer status,Long code,int pageNo, int pageSize);
+
+
+	public Order findById(Long id);
+
+	public Order save(Order bean);
+	
+	public Order updateByUpdater(Order updater);
+
+	public Order deleteById(Long id);
+
+	public Order[] deleteByIds(Long[] ids);
+
+    public Order[] deleteByIdsUpdateOrderDelStatus(Long[] ids);
+	
+	public  List<Object> getTotlaOrder(HttpServletRequest request);
+	
+	public BigDecimal getMemberMoneyByYear(Long memberId);
+	
+	public Pagination getOrderByReturn(Long memberId,Integer pageNo,Integer pageSize);
+
+    public List<Order> getlistByCommerceAndmember(String commerceId, Long memberId);
+
+    public Order getEntityByCode(String code);
+
+    public Order terminalCreateOrder(Long price, String payMethod, Long productId, Integer productCount, String terminalId, Integer deliverStatus,Date createTime,Long webId,Long memberId,Long shippingMethodId,Long deliveryInfo,String serialNumber,String userAccount);
+
+    public void updateOrder(String orderId, Long price, String payMethod, String serialNumber, String userAccount, String posNumber, Integer deliverStatus);
+
+    public Order createOrderForAShoot(MemberUserEntity memberUserEntity,String terminalId,Long[] cartItemId, Long shippingMethodId,Long deliveryInfo,Long paymentMethodId,
+                                      String comments, String ip,ShopMember member,String memberCouponId,int quantity,String serialNo, String userName, String userPhone, String address);
+
+    public void moveOrder(Order order,Long[] cartItemId, long shippingMethodId, long paymentMethodId);
+
+
+	public boolean isConsume(String code);
+
+	public Integer getOrderCount(Long productId, Long mobile,String cookieId ,Date newStart);
+}

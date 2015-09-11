@@ -1,0 +1,921 @@
+package com.jspgou.cms.manager.impl;
+
+import com.ifunpay.portal.dao.OrderPayRefundDao;
+import com.ifunpay.portal.entity.Channel;
+import com.ifunpay.portal.entity.MemberUserEntity;
+import com.ifunpay.portal.entity.OrderPayRefundEntity;
+import com.ifunpay.util.enums.PayMethodEnum;
+import com.ifunpay.portal.service.commerce.ChannelService;
+import com.ifunpay.portal.util.Arith;
+import com.jspgou.cms.dao.OrderDao;
+import com.jspgou.cms.dao.ProductDao;
+import com.jspgou.cms.dao.SequenceDao;
+import com.jspgou.cms.entity.*;
+import com.jspgou.cms.entity.ShopScore.ScoreTypes;
+import com.jspgou.cms.manager.*;
+import com.jspgou.common.hibernate3.Updater;
+import com.jspgou.common.page.Pagination;
+import com.jspgou.core.entity.Website;
+import com.jspgou.core.manager.WebsiteMng;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+/**
+ * This class should preserve.
+ *
+ * @preserve
+ */
+@Service
+@Transactional
+public class OrderMngImpl implements OrderMng {
+
+    private org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(OrderMngImpl.class);
+
+    public Pagination getPageForOrderReturn(Long memberId, int pageNo, int pageSize) {
+        return dao.getPageForOrderReturn(memberId, pageNo, pageSize);
+    }
+
+    //生成订单
+    public Order createOrder(Cart cart, Long[] cartItemId, Long shippingMethodId, Long deliveryInfo, Long paymentMethodId,
+                             String comments, String ip, ShopMember member, Long webId, String memberCouponId) {
+        Website web = websiteMng.findById(webId);
+        Long mcId = null;
+        if (!StringUtils.isBlank(memberCouponId)) {
+            mcId = Long.parseLong(memberCouponId);
+        }
+        Payment pay = paymentMng.findById(paymentMethodId);
+
+        Shipping shipping = shippingMng.findById(shippingMethodId);
+        ShopMemberAddress address = shopMemberAddressMng.findById(deliveryInfo);
+
+        Order order = new Order();
+        order.setPaymentCode(pay.getId() + "");
+        order.setShipping(shipping);
+        order.setWebsite(web);
+        order.setMember(member);
+        order.setPayment(pay);
+        order.setIp(ip);
+        order.setComments(comments);
+        order.setStatus(1);//未确认
+        order.setShippingStatus(1);//未发货
+        order.setPaymentStatus(1);//未支付
+        order.setReceiveName(address.getUsername());
+        order.setReceiveAddress(getAddress(address));
+        order.setReceiveMobile(address.getTel());
+        order.setReceivePhone(address.getMobile());
+        order.setReceiveZip(address.getPostCode());
+        int score = 0;
+        int weight = 0;
+        double price = 0.00;
+        Double couponPrice = 0.00;
+        Double popularityPrice = 0.0;
+        if (cart != null) {
+            List<PopularityItem> popularityItems = popularityItemMng.getlist(cart.getId(), null);
+            for (PopularityItem popularityItem : popularityItems) {
+                popularityPrice += popularityItem.getPopularityGroup().getPrivilege() * popularityItem.getCount();
+            }
+        }
+        if (mcId != null) {
+            MemberCoupon memberCoupon = memberCouponMng.findById(mcId);
+            if (memberCoupon != null) {
+                if (memberCoupon.getCoupon().getIsusing() && (!memberCoupon.getIsuse())) {
+                    couponPrice = memberCoupon.getCoupon().getCouponPrice().doubleValue();
+                    memberCoupon.setIsuse(true);
+                    memberCouponMng.update(memberCoupon);
+                }
+            }
+        }
+
+        List<CartItem> itemList = new ArrayList<CartItem>();
+        for (Long cId : cartItemId) {
+            itemList.add(cartItemMng.findById(cId));
+        }
+        for (CartItem item : itemList) {
+            score = score + item.getProduct().getScore() * item.getCount();
+            weight = weight + item.getProduct().getWeight() * item.getCount();
+            if (item.getProductFash() != null) {
+                price += item.getProductFash().getSalePrice() * item.getCount();
+            } else {
+                price += item.getProduct().getSalePrice() * item.getCount();
+            }
+        }
+        if (member.getFreezeScore() != null) {
+            member.setFreezeScore(score + member.getFreezeScore());//会员冻结的积分
+        } else {
+            member.setFreezeScore(score + 0);//会员冻结的积分
+        }
+        order.setScore(score);
+        order.setWeight((double) weight);
+        order.setProductPrice(new Double(Arith.mul(price, 100)).longValue());
+        double freight = shipping.calPrice((double) weight);
+        order.setFreight(freight);
+        order.setTotal(new Double(Arith.mul((freight + price - couponPrice - popularityPrice), 100)).longValue());
+        Long date = new Date().getTime() + member.getId();
+        //order.setCode(date);
+        order.setCode(sequenceDao.getSequenceOrderId());
+        order.setDel(0);
+
+        CartItem cartItem = null;
+        OrderItem orderItem = null;
+        String productName = "";
+        for (int j = 0; j < itemList.size(); j++) {
+            orderItem = new OrderItem();
+            cartItem = (CartItem) itemList.get(j);
+            orderItem.setOrdeR(order);
+            orderItem.setProduct(cartItem.getProduct());
+            orderItem.setWebsite(web);
+            orderItem.setCount(cartItem.getCount());
+            if (cartItem.getProductFash() != null) {
+                orderItem.setProductFash(cartItem.getProductFash());
+                orderItem.setSalePrice(cartItem.getProductFash().getSalePrice());
+            } else {
+                orderItem.setSalePrice(cartItem.getProduct().getSalePrice());
+            }
+            order.setProduct(cartItem.getProduct());
+            productName += orderItem.getProduct().getName();
+            order.addToItems(orderItem);
+            logger.info("order type ==" + orderItem.getProduct().getProductStamp());
+            order.setOrderType(orderItem.getProduct().getProductStamp());
+        }
+        order.setProductName(productName);
+        List<PopularityItem> popularityItemList = popularityItemMng.getlist(cart.getId(), null);
+        for (PopularityItem popularityItem : popularityItemList) {
+            popularityItemMng.deleteById(popularityItem.getId());
+        }
+        cart.getItems().removeAll(itemList);
+        cartMng.update(cart);
+        order = save(order);
+        ShopScore shopScore = null;
+        Product product = null;
+        ProductFashion fashion = null;
+        for (OrderItem item : order.getItems()) {
+            //处理库存
+            product = item.getProduct();
+            if (item.getProductFash() != null) {
+                fashion = item.getProductFash();
+                fashion.setStockCount(fashion.getStockCount() - item.getCount());
+                product.setStockCount(product.getStockCount() - item.getCount());
+                productFashionMng.update(fashion);
+            } else {
+                product.setStockCount(product.getStockCount() - item.getCount());
+            }
+            productMng.updateByUpdater(product);
+            shopScore = new ShopScore();
+            shopScore.setMember(member);
+            shopScore.setName(cartItem.getProduct().getName());
+            shopScore.setScoreTime(new Date());
+            shopScore.setStatus(false);
+            shopScore.setUseStatus(false);
+            shopScore.setScoreType(ScoreTypes.ORDER_SCORE.getValue());
+            shopScore.setScore(item.getProduct().getScore());
+            shopScore.setCode(order.getCode());
+            shopScoreMng.save(shopScore);
+        }
+        return order;
+    }
+
+    @Override
+    public Order createOrderForAShoot(MemberUserEntity memberUserEntity, String terminalId, Long[] cartItemId, Long shippingMethodId, Long deliveryInfo, Long paymentMethodId, String comments, String ip, ShopMember member, String memberCouponId, int quantity, String serialNo) {
+        return createOrderForAShoot(memberUserEntity, terminalId, cartItemId, shippingMethodId, deliveryInfo, paymentMethodId,
+                comments, ip, member, memberCouponId, quantity, serialNo, null, null, null);
+    }
+
+
+    //生成订单-一拍支付
+    public Order createOrderForAShoot(MemberUserEntity memberUserEntity, String terminalId, Long[] cartItemId, Long shippingMethodId, Long deliveryInfo, Long paymentMethodId,
+                                      String comments, String ip, ShopMember member, String memberCouponId, int quantity, String serialNo, String userName, String userPhone, String address) {
+        Website web = null;
+        java.util.List<Website> list = websiteMng.getAllList();
+        if (list.size() > 0) {
+            web = websiteMng.getAllList().get(0);
+        }
+        Long mcId = null;
+        if (!StringUtils.isBlank(memberCouponId)) {
+            mcId = Long.parseLong(memberCouponId);
+        }
+        Payment pay = paymentMng.findById(paymentMethodId);
+
+        Shipping shipping = null;
+        if(shippingMethodId !=null){
+            shipping =  shippingMng.findById(shippingMethodId);
+        }
+
+//        ShopMemberAddress address=shopMemberAddressMng.findById(deliveryInfo);
+
+        Order order = new Order();
+        order.setPaymentCode(pay.getId() + "");
+        order.setShipping(shipping);
+        order.setTerminalId(terminalId);
+        order.setWebsite(web);
+        //order.setMember(member);
+        if (memberUserEntity != null) {
+            order.setMemberUserEntity(memberUserEntity);
+            order.setReceivePhone(memberUserEntity.getPhone());
+        }
+        order.setPayment(pay);
+        order.setIp(ip);
+        order.setComments(comments);
+        order.setStatus(1);//未确认
+        order.setShippingStatus(1);//未发货
+        order.setPaymentStatus(1);//未支付
+//        order.setReceiveName(address.getUsername());
+//        order.setReceiveAddress(getAddress(address));
+//        order.setReceiveMobile(address.getTel());
+//        order.setReceivePhone(address.getMobile());
+//        order.setReceiveZip(address.getPostCode());
+        order.setReceiveName(userName);
+        order.setReceiveAddress(address);
+        order.setReceiveMobile(userPhone);
+        order.setReceiveZip("");
+
+        order.setSerialNo(serialNo);
+
+        int score = 0;
+        int weight = 0;
+        double price = 0.00;
+        Double couponPrice = 0.00;
+        Double popularityPrice = 0.0;
+       /* if(cart!=null){
+            List<PopularityItem> popularityItems=popularityItemMng.getlist(cart.getId(),null);
+            for(PopularityItem popularityItem:popularityItems){
+                popularityPrice+=popularityItem.getPopularityGroup().getPrivilege()*popularityItem.getCount();
+            }
+        }*/
+        if (mcId != null) {
+            MemberCoupon memberCoupon = memberCouponMng.findById(mcId);
+            if (memberCoupon != null) {
+                if (memberCoupon.getCoupon().getIsusing() && (!memberCoupon.getIsuse())) {
+                    couponPrice = memberCoupon.getCoupon().getCouponPrice().doubleValue();
+                    memberCoupon.setIsuse(true);
+                    memberCouponMng.update(memberCoupon);
+                }
+            }
+        }
+
+        List<Product> productList = new ArrayList<Product>();
+        for (Long cId : cartItemId) {
+            Product prd = productDao.findById(cId);
+            order.setProduct(prd);
+            try {
+                Channel channel = channelService.getChannelByChannelId(Long.parseLong(prd.getChannelId()));
+                order.setPayAccountName(channel.getBankPayInfoId());
+            }catch (Exception e){
+                logger.error("add pay account name error",e);
+            }
+            productList.add(prd);
+        }
+        for (Product item : productList) {
+            score = score + item.getScore() * quantity;
+            weight = weight + item.getWeight() * quantity;
+            price += Arith.mul(item.getScanningPrice(), quantity);
+
+        }
+        if (member != null) {
+            if (member.getFreezeScore() != null) {
+                member.setFreezeScore(score + member.getFreezeScore());//会员冻结的积分
+            } else {
+                member.setFreezeScore(score + 0);//会员冻结的积分
+            }
+        }
+        order.setScore(score);
+        order.setWeight((double) weight);
+        order.setProductPrice(new Double(Arith.mul(price, 100)).longValue());
+        order.setDel(0);
+        if(0==weight){
+            order.setFreight((double) 0);
+        }else {
+            double freight = shipping.calPrice((double) weight);
+            order.setFreight(freight);
+        }
+
+        order.setTotal(new Double(Arith.mul(price, 100)).longValue());
+        //Long date=new Date().getTime()+member.getId();
+        //order.setCode(date);
+        order.setCode(sequenceDao.getSequenceOrderId());
+
+        // CartItem cartItem=null;
+        OrderItem orderItem = null;
+        String productName = "";
+        int orderType = 0;
+        for (int j = 0; j < productList.size(); j++) {
+            orderItem = new OrderItem();
+            // cartItem=(CartItem) itemList.get(j);
+            orderItem.setOrdeR(order);
+            orderItem.setProduct(productList.get(j));
+            orderItem.setWebsite(web);
+            orderItem.setCount(quantity);
+
+            orderItem.setSalePrice(productList.get(j).getSalePrice());
+
+            productName += orderItem.getProduct().getName();
+            order.addToItems(orderItem);
+
+            orderType = productList.get(j).getProductStamp();
+        }
+        logger.info("type is :+" + orderType);
+
+        order.setOrderType(new Integer(orderType));
+        order.setProductName(productName);
+     /*   List<PopularityItem> popularityItemList = popularityItemMng.getlist(cart.getId(),null);
+        for(PopularityItem popularityItem:popularityItemList){
+            popularityItemMng.deleteById(popularityItem.getId());
+        }
+        */
+        order = save(order);
+        ShopScore shopScore = null;
+        Product product = null;
+        ProductFashion fashion = null;
+        for (OrderItem item : order.getItems()) {
+            //处理库存
+            product = item.getProduct();
+            if (item.getProductFash() != null) {
+                fashion = item.getProductFash();
+                fashion.setStockCount(fashion.getStockCount() - item.getCount());
+                product.setStockCount(product.getStockCount() - item.getCount());
+                productFashionMng.update(fashion);
+            } else {
+                product.setStockCount(product.getStockCount() - item.getCount());
+            }
+            productMng.updateByUpdater(product);
+            shopScore = new ShopScore();
+            // shopScore.setMember(member);
+            shopScore.setName(product.getName());
+            shopScore.setScoreTime(new Date());
+            shopScore.setStatus(false);
+            shopScore.setUseStatus(false);
+            shopScore.setScoreType(ScoreTypes.ORDER_SCORE.getValue());
+            shopScore.setScore(item.getProduct().getScore());
+            shopScore.setCode(order.getCode());
+            shopScoreMng.save(shopScore);
+        }
+        return order;
+    }
+
+
+    public String getAddress(ShopMemberAddress address) {
+        String str = "";
+        if (address.getProvince() != null) {
+            str = str + address.getProvince().getName() + " ";
+        }
+        if (address.getCity() != null) {
+            str = str + address.getCity().getName() + " ";
+        }
+        if (address.getCountry() != null) {
+            str = str + address.getCountry().getName() + " ";
+        }
+        str = str + address.getDetailaddress();
+        return str;
+    }
+
+    public Order updateByUpdater(Order bean) {
+        Updater<Order> updater = new Updater<Order>(bean);
+        return dao.updateByUpdater(updater);
+    }
+
+    public Pagination getOrderByReturn(Long memberId, Integer pageNo, Integer pageSize) {
+        return dao.getOrderByReturn(memberId, pageNo, pageSize);
+    }
+
+    public List<Order> getlistByCommerceAndmember(String commerceId, Long memberId) {
+        return dao.getlistByCommerceAndmember(commerceId, memberId);
+    }
+
+    public Order getEntityByCode(String code) {
+        return dao.findByCode(code);
+    }
+
+
+    public Order terminalCreateOrder(Long price, String payMethod, Long productId, Integer productCount, String terminalId, Integer deliverStatus, Date createTime, Long webId, Long memberId, Long shippingMethodId, Long deliveryInfo, String serialNumber, String userAccount) {
+
+       /* Order order = new Order();
+       // Website website = websiteMng.findById(webId);
+        Website website = null;
+        order.setWebsite(website);
+        String payMethodId = "1";
+        switch (payMethod) {
+            case ("FlashPay"):
+                payMethodId = "4";
+                break;
+            case ("Pos"):
+                payMethodId = "6";
+                break;
+            case ("QrCode "):
+                payMethodId = "7";
+                break;
+            case ("ScanPay"):
+                payMethodId = "5";
+                break;
+            default:
+                break;
+        }
+        Payment pay = paymentMng.findById(Long.valueOf(payMethodId));
+        order.setPayment(pay);
+
+        //ShopMember shopMember = shopMemberMng.findById(memberId);
+        //order.setMember(shopMember);
+
+        //Shipping shipping = shippingMng.findById(shippingMethodId);
+        Shipping shipping = null;
+        order.setShipping(shipping);
+
+        Product product = productMng.findById(productId);
+        order.setProduct(product);
+        order.setProductName(product.getName());
+        order.setCode(sequenceDao.getSequenceOrderId());
+        order.setWeight(0d);
+        order.setTotal(price);
+        order.setProductPrice(price);
+        order.setScore(0);
+        order.setFreight(0d);
+        order.setCreateTime(createTime);
+        order.setLastModified(createTime);
+        order.setOrderType(1);
+        order.setDel(0);
+        order.setTerminalId(terminalId);
+        order.setPaymentCode(pay.getId() + "");
+        order.setIp("127.0.0.1");
+
+
+        if (0 == deliverStatus) {
+            order.setShippingStatus(2);
+            //支付状态 1-未支付，2-已支付，3-已退款，4-退款失败
+            order.setPaymentStatus(2);//已支付
+            //订单状态 1-未确认，2-已确认，3-已取消，4-已完成.
+            order.setStatus(4);
+        } else if (2 == deliverStatus) {
+            order.setPaymentStatus(3);//已退款
+            order.setStatus(3);
+        }else {
+            order.setStatus(1);
+            order.setShippingStatus(1);
+            order.setPaymentStatus(1);
+        }
+        order = save(order);
+        OrderPayRefundEntity orderPayRefundEntity = new OrderPayRefundEntity();
+        orderPayRefundEntity.setId(sequenceDao.getOrderRefundEntityId());
+        orderPayRefundEntity.setPayMethod(Long.valueOf(payMethodId));
+        orderPayRefundEntity.setCode(order.getCode());
+        orderPayRefundEntity.setSerialNumber(serialNumber);
+        orderPayRefundEntity.setIsPay("1".charAt(0));
+        orderPayRefundEntity.setAccountNumber(userAccount);
+        orderPayRefundEntity.setAmount(price);
+        orderPayRefundEntity.setPayTime(new Date());
+
+
+        if (0 == deliverStatus) {
+            orderPayRefundEntity.setPayStatus(2);
+        } else if(2 == deliverStatus){
+            orderPayRefundEntity.setPayStatus(3);//已退款
+        }else {
+            orderPayRefundEntity.setPayStatus(1);
+        }
+
+        orderPayRefundDao.savePayInfo(orderPayRefundEntity);
+        return order;
+*/
+        return  null;
+    }
+
+    @Override
+    public void updateOrder(String orderId, Long price, String payMethod, String serialNumber, String userAccount, String posNumber, Integer deliverStatus) {
+        Order order = dao.findById(Long.valueOf(orderId));
+        order.setTotal(price);
+        order.setProductPrice(price);
+        String payMethodCode = null;
+        String payMethodId = null;
+        PayMethodEnum payMethodEnum = null;
+        switch (payMethod) {
+            case ("FlashPay"):
+                payMethodId = "4";
+                payMethodEnum = PayMethodEnum.FlashPay;
+                break;
+            case ("Pos"):
+                payMethodId = "6";
+                payMethodEnum = PayMethodEnum.InsertCard;
+                break;
+            case ("QrCode"):
+                payMethodId = "7";
+                payMethodEnum = PayMethodEnum.QrCode;
+                break;
+            case ("ScanPay"):
+                payMethodId = "5";
+                payMethodEnum = PayMethodEnum.AShotToPay;
+                break;
+            default:
+                break;
+
+        }
+        Payment payment = paymentMng.findById(Long.valueOf(payMethodId));
+        order.setPayment(payment);
+        order.setPaymentCode(payment.getId() + "");
+        if (null != deliverStatus) {
+            if (0 == deliverStatus) {
+                order.setShippingStatus(2);
+                order.setStatus(4);
+                order.setPaymentStatus(2);
+            } else {
+                order.setShippingStatus(1);
+                order.setStatus(1);
+                order.setPaymentStatus(1);
+            }
+        }
+
+        Updater<Order> updater = new Updater<Order>(order);
+        dao.updateByUpdater(updater);
+
+        OrderPayRefundEntity orderPayRefundEntity = orderPayRefundDao.findByOrderId(order.getCode());
+        if (null != orderPayRefundEntity) {
+            orderPayRefundEntity.setAmount(price);
+            orderPayRefundEntity.setPayMethod(payMethodEnum);
+            orderPayRefundEntity.setAccountNumber(userAccount);
+            orderPayRefundEntity.setSerialNumber(serialNumber);
+            orderPayRefundEntity.setPosNumber(posNumber);
+            orderPayRefundDao.saveOrUpdate(orderPayRefundEntity);
+        }
+    }
+
+//    @Override
+//    public Order createOrderForAShoot(MemberUserEntity memberUserEntity, String terminalId, Long[] cartItemId, Long shippingMethodId, Long deliveryInfo, Long paymentMethodId, String comments, String ip, ShopMember member, Long webId, String memberCouponId, int quantity, String serialNo, String userName, String userPhone, String address) {
+//        return null;
+//    }
+
+    @Transactional(readOnly = true)
+    public Pagination getPage(String channelName,String commerceName,String phone,String channelId, String commerceId, Long webId, Long memberId, String productName, String userName, Long paymentId, Long shippingId,
+                              Date startTime, Date endTime, Double startOrderTotal, Double endOrderTotal, Integer status, Integer paymentStatus, Integer shippingStatus,
+                              String code, int pageNo, int pageSize) {
+        Pagination page = dao.getPage(channelName,commerceName,phone,channelId, commerceId, webId, memberId, productName, userName, paymentId, shippingId,
+                startTime, endTime, startOrderTotal, endOrderTotal, status, paymentStatus, shippingStatus, code, pageNo, pageSize);
+        return page;
+    }
+
+    public Pagination getPageForNewOrder(Long channelId,Long commerceId,String code,String phone,String channelName,String commerceName,String productName,String startTime,String endTime,String payMethod,String paymentStatus,String shippingStatus,String status,int pageNo, int pageSize){
+        Pagination page = dao.getPageForNewOrder(channelId,commerceId,code,phone,channelName,commerceName,productName,startTime,endTime,payMethod,paymentStatus,shippingStatus,status,pageNo,pageSize);
+        return  page;
+    }
+
+    public java.util.List<Order> getAllOrderToExcel(String channelName,String commerceName,String productName,String phone,String channelId,String commerceId,Long paymentId,  Date startTime,Date endTime, Integer status,Integer paymentStatus,Integer shippingStatus,String code) {
+        return dao.getAllOrderToExcel(channelName, commerceName, productName, phone, channelId, commerceId, paymentId, startTime, endTime, status, paymentStatus, shippingStatus, code);
+    }
+
+    @Transactional(readOnly = true)
+    public Pagination getPageForVoucher(Long channelId,Long commerceId,String recepPhone,String productName,String commerceName,String voucherCode, String status, String code, int pageNo, int pageSize) {
+        Pagination page = dao.getPageForVoucher(channelId,commerceId,recepPhone,productName,commerceName,voucherCode, status, code, pageNo, pageSize);
+        return page;
+    }
+
+    public List<Order> getlist() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date newDate = new Date();
+        Date endDate = null;
+        Calendar date = Calendar.getInstance();
+        date.setTime(newDate);
+        date.set(Calendar.DATE, date.get(Calendar.DATE) - 1);
+        try {
+            endDate = sdf.parse(sdf.format(date.getTime()));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        List<Order> list = dao.getlist(endDate);
+        return list;
+    }
+
+    /**
+     * cancel order
+     */
+    public void abolishOrder() {
+        List<Order> orderList = getlist();
+        for (Order order : orderList) {
+            order.setStatus(3);
+            //处理库存
+            for (OrderItem item : order.getItems()) {
+                try {
+                    Product product = item.getProduct();
+                    if (product == null) {
+                        logger.info("order " + item.getId() + " does not associate product");
+                    } else {
+                        if (item.getProductFash() != null) {
+                            ProductFashion fashion = item.getProductFash();
+                            fashion.setStockCount(fashion.getStockCount() + item.getCount());
+                            product.setStockCount(product.getStockCount() + item.getCount());
+                            productFashionMng.update(fashion);
+                        } else {
+                            product.setStockCount(product.getStockCount() + item.getCount());
+                        }
+                    }
+                    productMng.updateByUpdater(product);
+                } catch (RuntimeException e) {
+                    logger.error("", e);
+                }
+            }
+            //会员冻结的积分
+            ShopMember member = order.getMember();
+            member.setFreezeScore(member.getFreezeScore() - order.getScore());
+            shopMemberMng.update(member);
+            List<ShopScore> list = shopScoreMng.getlist(order.getCode());
+            for (ShopScore s : list) {
+                shopScoreMng.deleteById(s.getId());
+            }
+            updateByUpdater(order);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Pagination getPage(Long webId, Long memberId, String productName, String userName, Long paymentId, Long shippingId,
+                              Date startTime, Date endTime, Double startOrderTotal, Double endOrderTotal, Integer status,
+                              Long code, int pageNo, int pageSize) {
+        Pagination page = dao.getPage(webId, memberId, productName, userName, paymentId, shippingId,
+                startTime, endTime, startOrderTotal, endOrderTotal, status, code, pageNo, pageSize);
+        return page;
+    }
+
+    @Transactional(readOnly = true)
+    public Pagination getPageForMember(Long memberId, int pageNo, int pageSize) {
+        return dao.getPageForMember(memberId, pageNo, pageSize);
+    }
+
+    public Pagination getPageForMember1(Long memberId, int pageNo, int pageSize) {
+        return dao.getPageForMember1(memberId, pageNo, pageSize);
+    }
+
+    public Pagination getPageForMember2(Long memberId, int pageNo, int pageSize) {
+        return dao.getPageForMember2(memberId, pageNo, pageSize);
+    }
+
+    public Pagination getPageForMember3(Long memberId, int pageNo, int pageSize) {
+        return dao.getPageForMember3(memberId, pageNo, pageSize);
+    }
+
+    @Transactional(readOnly = true)
+    public Order findById(Long id) {
+        Order entity = dao.findById(id);
+        return entity;
+    }
+
+
+    //销量
+    public void updateSaleCount(Long id) {
+        Order entity = dao.findById(id);
+        for (OrderItem item : entity.getItems()) {
+            Product product = item.getProduct();
+            product.setSaleCount(product.getSaleCount() + item.getCount());
+            productMng.update(product);
+        }
+    }
+
+    //利润
+    public void updateliRun(Long id) {
+        Order entity = dao.findById(id);
+        for (OrderItem item : entity.getItems()) {
+            Product product = item.getProduct();
+            ProductFashion productFashion = item.getProductFash();
+            if (productFashion != null) {
+                product.setLiRun(product.getLiRun() + item.getCount() * (productFashion.getSalePrice() - productFashion.getCostPrice()));
+            } else {
+                product.setLiRun(product.getLiRun() + item.getCount() * (product.getSalePrice() - product.getCostPrice()));
+            }
+
+            productMng.update(product);
+        }
+    }
+
+    public Order save(Order bean) {
+        bean.init();
+        dao.save(bean);
+        return bean;
+    }
+
+    public List<Object> getTotlaOrder(HttpServletRequest request) {
+        return dao.getTotlaOrder(request);
+    }
+
+    public BigDecimal getMemberMoneyByYear(Long memberId) {
+        return dao.getMemberMoneyByYear(memberId);
+    }
+
+    public Order deleteById(Long id) {
+        Order bean = dao.findById(id);
+        gatheringMng.deleteByorderId(id);
+        shipmentMng.deleteByorderId(id);
+        if (bean.getReturnOrder() != null) {
+            orderReturnMng.deleteById(bean.getReturnOrder().getId());
+        }
+        if ((bean.getShippingStatus() == 1 && bean.getStatus() == 1) || (bean.getShippingStatus() == 1 && bean.getStatus() == 2)) {
+            Set<OrderItem> set = bean.getItems();
+            //处理库存
+            for (OrderItem item : set) {
+                Product product = item.getProduct();
+                if (item.getProductFash() != null) {
+                    ProductFashion fashion = item.getProductFash();
+                    fashion.setStockCount(fashion.getStockCount() + item.getCount());
+                    product.setStockCount(product.getStockCount() + item.getCount());
+                    productFashionMng.update(fashion);
+                } else {
+                    product.setStockCount(product.getStockCount() + item.getCount());
+                }
+                productMng.updateByUpdater(product);
+            }
+            //会员冻结的积分
+            ShopMember member = bean.getMember();
+            member.setFreezeScore(member.getFreezeScore() - bean.getScore());
+            shopMemberMng.update(member);
+            List<ShopScore> list = shopScoreMng.getlist(bean.getCode());
+            for (ShopScore s : list) {
+                shopScoreMng.deleteById(s.getId());
+            }
+        }
+
+
+        bean = dao.deleteById(id);
+        return bean;
+    }
+
+    public Order deleteByIdUpdateDelStatus(Long id) {
+        Order bean = dao.findById(id);
+        /*gatheringMng.deleteByorderId(id);
+        shipmentMng.deleteByorderId(id);
+        if(bean.getReturnOrder()!=null){
+            orderReturnMng.deleteById(bean.getReturnOrder().getId());
+        }*/
+        if ((bean.getShippingStatus() == 1 && bean.getStatus() == 1) || (bean.getShippingStatus() == 1 && bean.getStatus() == 2)) {
+            Set<OrderItem> set = bean.getItems();
+            //处理库存
+            for (OrderItem item : set) {
+                Product product = item.getProduct();
+                if (item.getProductFash() != null) {
+                    ProductFashion fashion = item.getProductFash();
+                    fashion.setStockCount(fashion.getStockCount() + item.getCount());
+                    product.setStockCount(product.getStockCount() + item.getCount());
+                    productFashionMng.update(fashion);
+                } else {
+                    product.setStockCount(product.getStockCount() + item.getCount());
+                }
+                productMng.updateByUpdater(product);
+            }
+            //会员冻结的积分
+            ShopMember member = bean.getMember();
+            if (member != null) {
+                member.setFreezeScore(member.getFreezeScore() - bean.getScore());
+                shopMemberMng.update(member);
+                List<ShopScore> list = shopScoreMng.getlist(bean.getCode());
+                for (ShopScore s : list) {
+                    //shopScoreMng.deleteById(s.getId());
+                }
+            }
+        }
+
+
+        //bean = dao.deleteById(id);
+        bean = dao.updateOrderDelStatus(id);
+        return bean;
+    }
+
+    public Order[] deleteByIds(Long[] ids) {
+        Order[] beans = new Order[ids.length];
+        for (int i = 0, len = ids.length; i < len; i++) {
+            beans[i] = deleteById(ids[i]);
+        }
+        return beans;
+    }
+
+
+    public Order[] deleteByIdsUpdateOrderDelStatus(Long[] ids) {
+        Order[] beans = new Order[ids.length];
+        for (int i = 0, len = ids.length; i < len; i++) {
+            beans[i] = deleteByIdUpdateDelStatus(ids[i]);
+        }
+        return beans;
+    }
+
+    @Transactional
+    public void moveOrder(Order order, Long[] cartItemId, long shippingMethodId, long paymentMethodId) {
+        Website web = null;
+        java.util.List<Website> list = websiteMng.getAllList();
+        if (list.size() > 0) {
+            web = websiteMng.getAllList().get(0);
+        }
+        Long mcId = null;
+        Payment pay = paymentMng.findById(paymentMethodId);
+        Shipping shipping = shippingMng.findById(shippingMethodId);
+        order.setPaymentCode(pay.getId() + "");
+        order.setShipping(shipping);
+        order.setWebsite(web);
+        order.setPayment(pay);
+        List<Product> productList = new ArrayList<Product>();
+        for (Long cId : cartItemId) {
+            if(0!=cId){
+                Product product = productDao.findById(cId);
+                order.setProduct(product);
+                productList.add(product);
+            }else {
+                order.setProduct(null);
+            }
+
+        }
+        order.setDel(0);
+        if(null!=shipping){
+            double freight = shipping.calPrice((double) 0);
+            order.setFreight(freight);
+        }else {
+            order.setFreight((double) 0);
+        }
+
+        //Long date=new Date().getTime()+member.getId();
+        //order.setCode(date);
+        order.setCode(sequenceDao.getSequenceOrderId());
+
+        OrderItem orderItem = null;
+        String productName = "";
+        int orderType = 1;
+
+
+        for (int j = 0; j < productList.size(); j++) {
+            orderItem = new OrderItem();
+            // cartItem=(CartItem) itemList.get(j);
+            orderItem.setOrdeR(order);
+            orderItem.setProduct(productList.get(j));
+            orderItem.setWebsite(web);
+            Long count = null;
+            if(0==order.getTotal()){
+                 count=(long)0;
+            }else {
+                 count = order.getTotal() / order.getProductPrice();
+            }
+
+            orderItem.setCount(Integer.valueOf(count.toString()));
+
+            orderItem.setSalePrice(productList.get(j).getSalePrice());
+
+            productName += orderItem.getProduct().getName();
+            order.addToItems(orderItem);
+            if (null != productList.get(j).getProductStamp()) {
+                orderType = productList.get(j).getProductStamp();
+            }
+
+        }
+        order.setOrderType(new Integer(orderType));
+        order.setProductName(productName);
+        save(order);
+    }
+
+    public boolean isConsume(String code){
+        return dao.isConsumeForVoucher(code);
+    }
+
+    @Override
+    public Integer getOrderCount(Long productId, Long mobile,String cookieId, Date newStart) {
+        return dao.getOrderCount(productId,mobile,cookieId,newStart);
+    }
+
+    @Autowired
+    private ProductMng productMng;
+    @Autowired
+    private ProductFashionMng productFashionMng;
+    @Autowired
+    private ShopScoreMng shopScoreMng;
+    @Autowired
+    private WebsiteMng websiteMng;
+    @Autowired
+    private ShopMemberMng shopMemberMng;
+    @Autowired
+    private CartMng cartMng;
+    @Autowired
+    private OrderDao dao;
+    @Autowired
+    private CartItemMng cartItemMng;
+    @Autowired
+    private GatheringMng gatheringMng;
+    @Autowired
+    private ShipmentsMng shipmentMng;
+    @Autowired
+    private OrderReturnMng orderReturnMng;
+    @Autowired
+    private MemberCouponMng memberCouponMng;
+    @Autowired
+    private PaymentMng paymentMng;
+    @Autowired
+    private ShopMemberAddressMng shopMemberAddressMng;
+    @Autowired
+    private ShippingMng shippingMng;
+    @Autowired
+    private PopularityItemMng popularityItemMng;
+
+    @Autowired
+    private SequenceDao sequenceDao;
+
+    @Autowired
+    private ProductDao productDao;
+    @Autowired
+    private OrderPayRefundDao orderPayRefundDao;
+
+    @Resource
+    private ChannelService channelService;
+}

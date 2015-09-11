@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>jspgou-left</title>
+<#include "/jspgou_sys/head.html"/>
+<script type="text/javascript">
+$(function(){
+	JCore.lmenu('lmenu');
+});
+</script>
+</head>
+<body class="lbody">
+<ul id="lmenu">
+
+    <li><a href="member_right.do" target="rightFrame"><@s.m "global.admin.index"/></a></li>
+    <@authorize url="channel-local/v_list.do">
+    <li><a href="../channel-local/v_list.do" target="rightFrame">渠道</a></li>
+    </@authorize>
+    <@authorize url="commerce/v_list.do">
+    <li><a href="../commerce/v_list.do" target="rightFrame">商户</a></li>
+    </@authorize>
+    <@authorize url="store/v_list.do">
+    <li><a href="../store/v_list.do" target="rightFrame">店面</a></li>
+    </@authorize>
+
+<@authorize url="client-user/v_list.do">
+<li><a href="../client-user/v_list.do" target="rightFrame">客户端用户</a></li>
+</@authorize>
+
+<@authorize url="member/v_list.do"> 
+<li><a href="../member/v_list.do" target="rightFrame"><@s.m "member.function"/></a></li>
+</@authorize>
+<@authorize url="group/v_list.do"> 
+<li><a href="../group/v_list.do" target="rightFrame"><@s.m "group.function"/></a></li>
+</@authorize>
+<@authorize url="shopDictionary/v_list.do"> 
+<li><a href="../shopDictionary/v_list.do" target="rightFrame"><@s.m "shopDictionary.function"/></a></li>
+</@authorize>
+<@authorize url="shopDictionaryType/v_list.do"> 
+<li><a href="../shopDictionaryType/v_list.do" target="rightFrame"><@s.m "shopDictionaryType.function"/></a></li>
+</@authorize>
+<@authorize url="address/v_list.do"> 
+<li><a href="../address/v_list.do" target="rightFrame">地区管理</a></li>
+</@authorize>
+<@authorize url="commerce/v_list.do">
+<li><a href="../commerce/moveDataSteps.do" target="rightFrame">数据迁移</a></li>
+</@authorize>
+</ul>
+</body>
+</html>

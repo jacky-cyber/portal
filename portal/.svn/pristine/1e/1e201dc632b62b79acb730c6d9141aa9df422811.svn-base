@@ -1,0 +1,30 @@
+package com.ifunpay.portal.service.order;
+
+import com.ifunpay.portal.dao.order.OrderProductDao;
+import com.ifunpay.portal.entity.order.OrderProduct;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * Created by CongLongXie on 2015/7/24.
+ */
+@Service
+public class OrderProductService {
+    @Resource
+    private OrderProductDao orderProductDao;
+
+    public List<OrderProduct> getOrderProductByOrderId(String orderNumber){
+        return orderProductDao.getOrderProductByOrderId(orderNumber);
+    }
+
+    public int CountTotalSaleOut(Long productId){
+        return orderProductDao.CountTotalSaleOut(productId);
+    }
+
+    public int CountTotalOrder(Long productId){
+        return orderProductDao.CountTotalOrder(productId);
+    }
+
+}

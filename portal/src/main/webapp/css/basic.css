@@ -1,0 +1,104 @@
+﻿/*CSS全局通用定义样式表*/
+* {
+	margin:0;
+	padding:0;
+}
+body {
+	color:#000;
+	font-family: Arial, 宋体, Helvetica, sans-serif;
+	font-size:12px;
+	padding:15px 20px;
+}
+a {
+	color:red;
+	font:Arial, 宋体, Helvetica, sans-serif 12px;
+	text-decoration:none;
+	outline:none;
+ blr:expression(this.onFocus=this.blur());
+}
+input::-moz-focus-inner {
+ border:none;
+}
+h1, h2, h3, h4, h5, h6 {
+	color:#333;
+	font-szie:14px;
+}
+ol, li {
+	list-style:none;
+}
+img {
+	border: 0;
+}
+table,td,th {
+	border-collapse:collapse;
+	border-spacing:0;
+font-size:12px;
+}
+input {
+	vertical-align:middle;
+	cursor:pointer;
+	font-size:12px;
+}
+button {
+	border:none;
+	cursor:pointer;
+	font-size:12px;
+}
+#nav {
+	height:30px;
+	line-height:30px;
+	background:url(../images/line_bg.gif) repeat-x left bottom;
+	font-family:宋体;
+	padding-left:5px;
+}
+#nav b {
+	background:url(../images/tb.gif) no-repeat left center;
+	padding-left:20px;
+}
+.tools {
+	font-size:0;
+	margin-top:20px;
+	margin-bottom:15px;
+	width:300px;
+}
+.date_btn, .date_btn i {
+  background:url(../images/btn_bg.gif) no-repeat;
+  display:inline-block;
+  height:27px;
+  cursor:pointer;
+}
+.date_btn {
+  background-position:left top;
+  padding-left:9px;
+  margin-right:10px;
+}
+.date_btn i {
+  background-position:right -27px;
+  padding-right:9px;
+}
+.date_btn input {
+  border:0px;
+  height:27px;
+  line-height:27px;
+  cursor:pointer;
+  background:none;
+  display:inline-block;
+  font-size:12px;
+  color:#525252;
+  text-align:center;
+  outline:none;
+blr:expression(this.onFocus=this.blur());
+  padding: 0 .25em;
+  width: auto;
+  _width: 0;
+overflow:visible !ie;
+}
+
+h3.title {
+	font-size:14px;
+	color:#16a0bc;
+	height:30px;
+	line-height:30px;
+	margin-top:15px;
+	margin-bottom:10px;
+}

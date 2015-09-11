@@ -1,0 +1,55 @@
+package com.jspgou.common.jdbc;
+
+import lombok.extern.log4j.Log4j;
+import org.apache.poi.ss.formula.functions.T;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Created by jiang on 2015/9/8.
+ */
+@Log4j
+public class JdbcBaseDao {
+    public static final String ROW_COUNT = "select count(*) rowCount from ";
+    @Resource
+    JdbcTemplate jdbcTemplate;
+
+    public int getCount(String sql) {
+        int count = 0;
+        try {
+            String rowCountSql = ROW_COUNT + "(" + sql + ") view";
+            count = jdbcTemplate.queryForObject(rowCountSql, null, Integer.class);
+        } catch (DataAccessException e) {
+            log.error("", e);
+        }
+        return count;
+    }
+
+    public List getResult(String sql, int start, int size) {
+        List<Map<String, Object>> list = null;
+        try {
+            jdbcTemplate.setFetchSize(start);
+            jdbcTemplate.setMaxRows(size);
+            list= jdbcTemplate.queryForList(sql);
+        } catch (DataAccessException e) {
+            log.error("", e);
+        }
+        return list;
+    }
+
+    public List<?> getResult(String sql, int start, int size, Class<?> clazz) {
+        List<?> list = null;
+        try {
+            jdbcTemplate.setFetchSize(start);
+            jdbcTemplate.setMaxRows(size);
+            list= jdbcTemplate.queryForList(sql, clazz);
+        } catch (DataAccessException e) {
+            log.error("", e);
+        }
+        return list;
+    }
+}

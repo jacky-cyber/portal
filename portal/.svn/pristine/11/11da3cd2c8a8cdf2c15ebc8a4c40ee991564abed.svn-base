@@ -1,0 +1,131 @@
+package com.ifunpay.portal.controller;
+
+import com.ifunpay.portal.dao.BaseDao;
+import com.ifunpay.portal.entity.BankPayInfo;
+import com.ifunpay.util.enums.PaymentStatusEnum;
+import com.ifunpay.portal.model.PaidInfo;
+import com.ifunpay.portal.model.BankAppEnum;
+import com.ifunpay.portal.service.PaymentManageService;
+import com.ifunpay.portal.service.ThreadPoolService;
+import com.ifunpay.portal.service.order.BankAccountService;
+import com.ifunpay.util.jackson.JsonUtil;
+import com.ifunpay.util.mongo.MongoUtil;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+
+/**
+ * Created by Yu on 2014/12/16.
+ */
+@Controller
+public class MobilePayController {
+
+    private Logger logger = Logger.getLogger(MobilePayController.class);
+
+    @Resource
+    BaseDao baseDao;
+
+    @Resource
+    ThreadPoolService threadPoolService;
+
+    @Resource
+    PaymentManageService paymentManageService;
+
+    @Resource
+    BankAccountService bankAccountService;
+
+
+    /**
+     * 调用手机支付
+     *
+     * @param payInfoId   渠道的payInfoId
+     * @param amountCents 金额，单位：分
+     * @param orderId     订单ID
+     * @param request
+     * @return
+     */
+    @RequestMapping("/mobilePay/{payInfoId}/{amountCents}/{orderId}")
+    public ModelAndView mobilePay(
+            @PathVariable String payInfoId,
+            @PathVariable double amountCents,
+            @PathVariable String orderId,
+            HttpServletRequest request) {
+        ModelAndView modelAndView = new ModelAndView();
+        try {
+            double yuan = amountCents / 100.0;
+            String amountStr = new DecimalFormat("#0.00").format(yuan);
+            logger.info("order to pay: " + orderId);
+            Optional<BankPayInfo> bankPayInfo = baseDao.get(BankPayInfo.class, payInfoId);
+            if (!bankPayInfo.isPresent()) {
+                logger.error("no such pay info id: " + payInfoId);
+                modelAndView.setViewName("500");
+            } else {
+                paymentManageService.pay(modelAndView, request, orderId, bankPayInfo.get(), amountStr);
+            }
+        } catch (Throwable throwable) {
+            logger.error("", throwable);
+            modelAndView.setViewName("500");
+        }
+        return modelAndView;
+    }
+
+
+    /**
+     * @param bank
+     * @param request
+     * @param isFromUser TRUE: from user; FAlSE: from bank server
+     * @return
+     */
+    @RequestMapping("/paid/{bank}/{isFromUser}")
+    public ModelAndView payCallBack(@PathVariable String bank, HttpServletRequest request, @PathVariable boolean isFromUser) {
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.setViewName("payment/callback");
+        BankAppEnum bankAppEnum = BankAppEnum.valueOf(bank.toUpperCase());
+
+        if (!paymentManageService.ifNeedToProcessCallback(bankAppEnum, isFromUser, request, modelAndView)) {
+            return modelAndView;
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("request json: " + JsonUtil.toJson(request.getParameterMap()));
+        }
+
+        Map<String, Object> map = new HashMap<>(request.getParameterMap());
+        map.put("isFromUser", isFromUser);
+        MongoUtil.saveObjectsIfPossible("bankCallback", map);
+
+        try {
+            PaidInfo paidInfo = paymentManageService.payCallback(bankAppEnum, request, modelAndView, isFromUser);
+            //accountService.saveAccount(info);
+            //保存回调的支付信息
+            bankAccountService.saveBankAccountInfo(paidInfo);
+            if (paidInfo.getStatus() == PaymentStatusEnum.PaySucceeded) {
+                logger.info("Paid SUCCESS!");
+                modelAndView.addObject("message", "支付成功");
+            } else {
+                logger.info("Paid Failed: " + paidInfo.getStatus());
+                modelAndView.addObject("message", "支付失败");
+            }
+        } catch (RuntimeException e) {
+            logger.error("Paid ERROR", e);
+            modelAndView.addObject("message", e.getMessage());
+        }
+        return modelAndView;
+    }
+
+    @RequestMapping("/paid/{bank}")
+    public ModelAndView payCallBack(@PathVariable String bank, HttpServletRequest request) {
+        return payCallBack(bank, request, false);
+    }
+
+}

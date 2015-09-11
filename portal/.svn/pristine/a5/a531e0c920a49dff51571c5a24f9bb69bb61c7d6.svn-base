@@ -1,0 +1,116 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $("table tr").mousemove(function(){
+                $(this).css({"background-color":"#84ccc9"});
+            });
+            $("table tr").mouseout(function(){
+                $(this).css({"background-color":"white"});
+            });
+        });
+
+        function optDelete() {
+            if(Pn.checkedCount('ids')<=0) {
+                alert("<@s.m 'error.checkRecord'/>");
+                return;
+            }
+            if(!confirm("<@s.m 'global.confirm.delete'/>")) {
+                return;
+            }
+            var f = getTableForm();
+            f.action="o_delete.do";
+            f.submit();
+        }
+
+        function getTableForm() {
+            return document.getElementById('tableForm');
+        }
+
+        function check() {
+            var stm=new Date(Date.parse($("input[name='startTime']").val()));
+            var etm=new Date(Date.parse($("input[name='endTime']").val()));
+            var diff=parseInt((etm.getTime() - stm.getTime()) / (1000 * 60 * 60 * 24));
+            if(31 < diff) {
+                alert("查询天数不应该大于31天");
+            } else {
+                $("#searchModel").submit();
+            }
+        }
+
+        function channelToXls() {
+            var stm= $("input[name='startTime']").val();
+            var etm= $("input[name='endTime']").val();
+            var n=$("input[name='channelName']").val();
+            window.open("../channelToXls.do?channelName="+n+"&startTime="+stm+"&endTime="+etm, '_self');
+        }
+    </script>
+    <style type="text/css">
+        table tr td{
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+<div class="body-box">
+<div class="rhead">
+    <div class="rpos"><@s.m "global.position"/>: 渠道 - <@s.m "global.list"/></div>
+    <form class="ropt">
+        <input type="submit" value="<@s.m "global.add"/>" onclick="this.form.action='v_add.do';"/>
+    </form>
+    <div class="clear"></div>
+</div>
+<div class="rhead">
+    <form id="searchModel" action="./v_list.do">
+        <div style="padding-top:5px">
+            <input type="hidden" name="pageNo"/>
+            日期：<input type="text" name="startTime" value="${startTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:100px"/>&nbsp;至&nbsp;<input type="text" name="endTime" value="${endTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:100px"/>
+            渠道名称：<input type="text" name="channelName" value="${channelName!}"/>
+            <input type="button" onclick="check()" value="<@s.m "global.query"/>" />
+            &nbsp;&nbsp;
+            <a href="javascript:void(0)" onclick="channelToXls();">导出查询结果</a></td>
+            &nbsp;&nbsp;
+            <a href="../channel-local/downloadChannelDemo.do" >下载模版</a>
+            &nbsp;&nbsp;
+            <a href="../channel-local/importChannel.do" >导入渠道</a>
+        </div>
+    </form>
+    <div class="clear"></div>
+</div>
+<form id="tableForm" method="post">
+    <input type="hidden" name="pageNo" value="${pageNo!}"/>
+    <@p.table value=pagination;page,i,has_next><#rt/>
+        <@p.column title="<input type='checkbox' onclick='Pn.checkbox(\"ids\",this.checked)'/>" width="20">
+                <input type='checkbox' name='ids' value='${page.id}'/><#t/>
+        </@p.column><#t/>
+        <@p.column code="渠道ID" >${page.id!}</@p.column><#t/>
+        <@p.column code="渠道编号" >${page.channelId!}</@p.column><#t/>
+        <@p.column code="渠道名称" >${page.channelName!}</@p.column><#t/>
+        <@p.column code="状态" ><#if page.status == '1'>启用</#if><#if page.status == '2'>禁用</#if></@p.column><#t/>
+        <@p.column code="支付方式" >${page.payMethod!}</@p.column><#t/>
+        <@p.column code="创建时间" >${page.createDate!}</@p.column><#t/>
+        <@p.column code="global.operate" >
+       <!-- <a href="v_view.do?id=${page.id}&pageNo=${pageNo!}">查看</a> | <#rt/>-->
+        <a href="v_edit.do?id=${page.id}&pageNo=${pageNo!}"><@s.m "global.edit"/></a> | <#rt/>
+        <!--<a href="o_delete.do?ids=${page.id}&pageNo=${pageNo!}" onclick="if(!confirm('<@s.m "global.confirm.delete"/>')) {return false;}"><@s.m "global.delete"/></a> | <#t/>-->
+        <a href="channel_user_list.do?id=${page.id}&pageNo=${pageNo!}">操作员管理</a><#rt/>
+        </@p.column><#t/>
+    </@p.table>
+<!--<div><input type="button" value="<@s.m "global.delete"/>" onclick="optDelete();"/></div>-->
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+<script type="text/javascript">
+    function _gotoPage(pageNo) {
+        var tableForm = document.getElementById('searchModel');
+        $("input[name=pageNo]").val(pageNo);
+        tableForm.action="v_list.do";
+        tableForm.submit();
+    }
+</script>
+</html>

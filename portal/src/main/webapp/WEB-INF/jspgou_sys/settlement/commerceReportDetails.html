@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+
+        $(document).ready(function(){
+            $("table tr").mousemove(function(){
+                $(this).css({"background-color":"#84ccc9"});
+            });
+            $("table tr").mouseout(function(){
+                $(this).css({"background-color":"white"});
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>: <@s.m "commerceReport.detail.all"/> - <@s.m "global.list"/></div>
+        <form class="ropt">
+        </form>
+        <div class="clear"></div>
+    </div>
+    <div class="rhead">
+        <form id="select" action="./v_list.do">
+            <div style="padding-top:5px">
+            </div>
+        </form>
+        <div class="clear"></div>
+    </div>
+    <form id="tableForm" method="post">
+        <input type="hidden" name="pageNo" value="${pageNo!}"/>
+        <@p.table value=pagination;settlement,i,has_next><#rt/>
+        <@p.column code="商户名称" >${settlement.commerceName!}</@p.column><#t/>
+        <@p.column code="商品名称" >${settlement.productName!}</@p.column><#t/>
+        <@p.column code="商品ID" >${settlement.productId!}</@p.column><#t/>
+        <@p.column code="单价(元)" >${settlement.price!}</@p.column><#t/>
+        <@p.column code="销售数量" >${settlement.sell!}</@p.column><#t/>
+        <@p.column code="退款订单数量" >${settlement.refund!}</@p.column><#t/>
+        <@p.column code="订单数量" >${settlement.order!}</@p.column><#t/>
+        <@p.column code="本月消费" >${settlement.used!}</@p.column><#t/>
+        <@p.column code="消费总额" >${settlement.usedAmount!}</@p.column><#t/>
+        <@p.column code="收款总额" >${settlement.receivedAmount!}</@p.column><#t/>
+        <@p.column code="退款总额" >${settlement.refundAmount!}</@p.column><#t/>
+        <@p.column code="应收款" >${settlement.realReceivedAmount!}</@p.column><#t/>
+        </@p.table>
+</form>
+</div>
+</body>
+</html>

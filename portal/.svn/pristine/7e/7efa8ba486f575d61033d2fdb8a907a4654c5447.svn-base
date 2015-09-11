@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+
+        function getTableForm() {
+            return document.getElementById('tableForm');
+        }
+        function optDelete() {
+            if(Pn.checkedCount('ids')<=0) {
+                alert("<@s.m 'error.checkRecord'/>");
+                return;
+            }
+//            if(!confirm("<@s.m 'global.confirm.delete'/>")) {
+//                return;
+//            }
+            var f = getTableForm();
+            f.action="o_bind_save.do";
+            f.submit();
+        }
+        function backToList(o) {
+            o.form.action='../v_list.do';
+        }
+        $(function(){
+            var bingProductId = $("#bingProductId").get(0).options.length;
+            for (var i = 0; i < bingProductId; i++) {
+                var productId = $("#bingProductId").get(0).options[i].value
+                $("#"+productId).remove();
+                $("#productId"+productId).show();
+            }
+
+            var otherBingProductId = $("#otherBingProductId").get(0).options.length;
+            for (var i = 0; i < otherBingProductId; i++) {
+                var productId = $("#otherBingProductId").get(0).options[i].value
+                $("#"+productId).remove();
+                $("#other"+productId).show().css("color","red");;
+
+            }
+
+        });
+
+    </script>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>: 限购商品列表  - <@s.m "global.list"/></div>
+
+        <form class="ropt">
+             <input type="submit" value="<@s.m "global.backToList"/>" onclick="backToList(this);"/>
+        </form>
+        <div class="clear"></div>
+    </div>
+    <div class="rhead">
+        <form action="v_list.do" method="post">
+            商品ID：<input name="productId" value="${productId!}" style="width:100px"/>
+            商品名称：<input name="productName" value="${productName!}" style="width:100px"/>
+            商户名称：<input name="commerceName" value="${commerceName!}" style="width:100px"/>
+            是否关联：<select  name="banding"  style="width:100px"/>
+            <option value="">无</option>
+            <option value="1"<#if banding??> <#if banding==1!>selected="selected"</#if></#if>>已经关联</option>
+            <option value="2"<#if banding??> <#if banding==2!>selected="selected"</#if></#if>>未关联</option>
+
+            </select>
+            <input name="pageNo" value="${pageNo!}" style="display: none"/>
+            <input name="favorableId" value="${favorableId!}" style="display: none"/>
+            <input type="submit"  class="ropt" value="<@s.m "global.query"/>" />
+        </form>
+    </div>
+    <form id="tableForm" method="post">
+        <input type="hidden" name="pageNo" value="${pageNo!}"/>
+        <input type="hidden" name="favorableId" value='${favorableId!}'/>
+        <input type="hidden" name="channelId" value='${channelId!}'/>
+    <@p.table value=pagination;product,i,has_next><#rt/>
+        <@p.column title="<input type='checkbox' onclick='Pn.checkbox(\"ids\",this.checked)'/>" width="20">
+        <input type='checkbox' name='ids' value='${product.id}' id=${product.id} /><#t/>
+    </@p.column><#t/>
+    <@p.column title="ID">${product.id}<input type="hidden" name="wids" value="${product.id}"/></@p.column><#t/>
+<@p.column code="商品名称">${product.name}</@p.column><#t/>
+<@p.column code="所属渠道">${product.channelName!}</@p.column><#t/>
+<@p.column code="所属商户">${product.commerceName!}</@p.column><#t/>
+
+<@p.column code="global.operate" >
+
+<a href="p_delete.do?favorableId=${favorableId!}&productId=${product.id}&channelId=${channelId!}&pageNo=${pageNo!}" id=productId${product.id}  style="display: none" onclick="if(!confirm('<@s.m "global.confirm.delete"/>')) {return false;}">解除绑定</a><#t/>
+<a href="" id=other${product.id}  style="display: none">绑定了其他限购</a><#t/>
+
+</@p.column><#t/>
+
+</@p.table>
+
+<div><input type="button" value="保存" onclick="optDelete();"/>
+    <!--&nbsp;<input type="button" value="<@s.m "global.saveOrder"/>" onclick="optPriority();"/>-->
+</div>
+<div style="display: none" >
+    已绑定限购的商品id <select  id="bingProductId"  style="width:100px">
+    <#list refuseBind as refuseBinds>
+        <option value="${refuseBinds!}" selected > </option>
+    </#list>
+    </select>
+    </div>
+
+<div style="display: none" >
+    已绑定限购的商品id <select  id="otherBingProductId"  style="width:100px">
+    <#list otherBind as otherBinds>
+        <option value="${otherBinds!}" selected > </option>
+    </#list>
+</select>
+</div>
+
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+</html>

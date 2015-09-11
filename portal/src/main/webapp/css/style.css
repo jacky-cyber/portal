@@ -1,0 +1,16 @@
+/* CSS Document */
+/****¹²ÓÃÑùÊ½****/
+@charset"utf-8";
+
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, fieldset, input, textarea, p, blockquote, th, td, tr, button{padding:0; margin:0;}
+ul{list-style:none;}
+img{border:none;}
+body{ margin:0px auto; padding:0px; text-align:center;}
+.all{  width:320px; text-align:center; margin:0 auto; background:url(../images/picture.jpg) no-repeat; height:232px; background-size:320px 350px; padding-top:118px;}
+.scratch{position:absolute; top:115px; left:20%;}
+.prize{position:absolute; top:115px; left:20%; height:50px; line-height:50px; width:188px;}
+.prize img{margin-top:8px; float:left; margin-left:2px;}
+.content{ font-size:18px; font-family:"Î¢ÈíÑÅºÚ"; line-height:72px; color:#ba1111;}
+.con{ text-align:center; margin:0 auto; background:url(../images/bj_con.gif) repeat; width:300px; padding:10px; color:#fff; font-family:"Î¢ÈíÑÅºÚ"; font-size:13px;}
+.con dl{ display:-webkit-box;}
+.con dd{ -webkit-box-flex:1; text-align:left;}

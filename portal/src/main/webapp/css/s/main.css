@@ -1,0 +1,89 @@
+div,span,a,input,button,textarea{outline:none; border:none;font-family:微软雅黑;}
+html{-webkit-tap-highlight-color:rgba(0, 0, 0, 0);-webkit-touch-callout:none;} /*去除Android系统中默认的反馈样式*/ 
+body{ font-size:16px; font-family:微软雅黑;-webkit-touch-callout:none; background-color:#f1f6fa;}
+body.home{ background: url(../../images/bg.jpg) top center no-repeat ; background-size:cover; width:100%; }
+body.homeszboc{ background: url(../../images/jrc_05.png) top center no-repeat ; background-size:cover; width:100%; }
+.cas{ 
+	position: absolute;
+	top: 240px;
+	left: 50%;
+	z-index: 999;
+	width: 300px;
+	height: 21px;
+	margin: 0 0 0 -50px;
+	}
+.jrc{ position:absolute; bottom:30px; margin-left:20px;}
+
+.fl{ float:left;}
+.fr{ float:right;}
+
+.homeBox{ padding:25px 10px 15px;}
+
+
+.tr1{display:-moz-box; display:box; display:-webkit-box;width:100%;}
+.tr1  .btn_h{ -moz-box-flex:1;-webkit-box-flex:1;box-flex:1;}
+
+
+
+
+
+
+
+
+
+
+.btn_h{/* width:80px; margin:10px; float:left;*/ text-align:center;}
+.btn_h a{ color:#3e535e;}
+.btn_h h4{ text-align:center; padding:5px 0;}
+.btn_h a{ display:inline-block; margin:8px auto; width:70px; height:106px;}
+.btn_h a span{ display:inline-block; width:70px; height:70px; margin:0 auto; }
+.btn_h a span img{ width:70px; height:70px;}
+
+
+
+.header{background-image:-webkit-gradient(linear, left top, left bottom, from(#2371af), to(#1e6aa5));
+	    background-image:-webkit-linear-gradient(#2371af, #1e6aa5);
+	    background-image:-moz-linear-gradient(#2371af, #1e6aa5);
+	    background-image:-ms-linear-gradient(#2371af, #1e6aa5);
+	    background-image:-o-linear-gradient(#2371af, #1e6aa5);
+	    background-image:linear-gradient(#2371af, #1e6aa5); border-bottom:2px solid #1a5787; height:50px; width:100%; line-height:50px;}
+.header h2{ text-align:left; color:#FFF; text-shadow:0 1px 0 #333; font-size:24px; font-weight:bold; padding-left:10px; }
+
+.bar_top{ height:50px; width:100%; background:url(../../images/bar_bg.png) left top repeat; background-size:225px 50px; line-height:50px; text-align:center;}
+.bar_top h3{ font-size:20px; color:#F60;}
+
+
+
+/*银行业务介绍页面*/
+.info{ background:url(../../images/b_bg.jpg) repeat;}
+.warp_info{ width:94%; margin:3% ; background-color:#FFF; border:#999 1px solid; border-radius:8px;}
+
+.info_des{ padding:15px 8px;display:-moz-box;display:-webkit-box; display:box;}
+.info_des_text{  -moz-box-flex:1;-webkit-box-flex:1;box-flex:1; padding:10px 0 0 15px;}
+
+.info_des_text h4{ font-size:18px; font-weight:bold; margin-bottom:8px;}
+
+.tit_c{ height:35px; line-height:35px; margin:10px 0; padding:0 15px ;background-image:-webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#eeeeee));
+	    background-image:-webkit-linear-gradient(#ffffff, #eeeeee);
+	    background-image:-moz-linear-gradient(#ffffff, #eeeeee);
+	    background-image:-ms-linear-gradient(#ffffff, #eeeeee);
+	    background-image:-o-linear-gradient(#ffffff, #eeeeee);
+	    background-image:linear-gradient(#ffffff, #eeeeee); border-bottom:#dad9d9 1px solid; box-shadow:0 1px 1px #999;border-top:1px solid #CCC; }
+.tit_c span{ display:inline-block; width:25px; height:25px; float:left; margin-top:5px; margin-right:8px;}
+.tit_c span.icon1{ background:url(../../images/bankinfo/ic1.jpg) center center no-repeat; background-size:25px 25px;}
+.tit_c span.icon2{ background:url(../../images/bankinfo/ic2.jpg) center center no-repeat; background-size:25px 25px;}
+.tit_c span.icon3{ background:url(../../images/bankinfo/ic3.jpg) center center no-repeat; background-size:25px 25px;}
+.tit_c span.icon4{ background:url(../../images/bankinfo/ic4.jpg) center center no-repeat; background-size:25px 25px;}
+.tit_c span.icon5{ background:url(../../images/bankinfo/ic5.jpg) center center no-repeat; background-size:25px 25px;}
+.tit_c span.icon6{ background:url(../../images/bankinfo/ic6.jpg) center center no-repeat; background-size:25px 25px;}
+.tit_c span.icon7{ background:url(../../images/bankinfo/ic7.jpg) center center no-repeat; background-size:25px 25px;}
+.tit_c span.icon8{ background:url(../../images/bankinfo/ic8.jpg) center center no-repeat; background-size:25px 25px;}
+.tit_c span.icon9{ background:url(../../images/bankinfo/ic9.jpg) center center no-repeat; background-size:25px 25px;}
+.tit_c span.icon10{ background:url(../../images/bankinfo/ic10.jpg) center center no-repeat; background-size:25px 25px;}
+
+
+.text_c{ padding: 15px; font-size:16px; line-height:24px;}
+.text_c h3{ margin:10px 0 12px 0;}
+.text_c h4{ margin:8px 0 10px 0;}
+
+

@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+
+        $(document).ready(function(){
+            $("table tr").mousemove(function(){
+                $(this).css({"background-color":"#84ccc9"});
+            });
+            $("table tr").mouseout(function(){
+                $(this).css({"background-color":"white"});
+            });
+        });
+
+        function getTableForm() {
+            return document.getElementById('tableForm');
+        }
+
+        function channelReportToXls() {
+            var flag = checkDate();
+            if (flag) {
+                var st=$("input[name='startTime']").val();
+                var et=$("input[name='endTime']").val();
+                var n=$("input[name='name']").val();
+                window.open("../channelReportToXls.do?startTime="+st+"&endTime="+et+"&name="+n, '_self');
+            }
+        }
+        function check() {
+            var stm=new Date(Date.parse($("input[name='startTime']").val()));
+            var etm=new Date(Date.parse($("input[name='endTime']").val()));
+            var diff=parseInt((etm.getTime() - stm.getTime()) / (1000 * 60 * 60 * 24));
+            if(31 < diff) {
+                alert("查询天数不应该大于31天");
+            } else {
+                $("#select").submit();
+            }
+        }
+
+        function toCharts() {
+            var flag=checkDate();
+            if(flag) {
+                var st=$("input[name='startTime']").val();
+                var et=$("input[name='endTime']").val();
+                var n=$("input[name='name']").val();
+                var urlStr="../channelReportChart/v_list.do?startTime="+st+"&endTime="+et+"&name="+n;
+                $("#clickH").attr("href",urlStr);
+            }
+        }
+
+        function checkDate() {
+            var stm=new Date(Date.parse($("input[name='startTime']").val()));
+            var etm=new Date(Date.parse($("input[name='endTime']").val()));
+            var diff=parseInt((etm.getTime() - stm.getTime()) / (1000 * 60 * 60 * 24));
+            if(31 < diff) {
+                alert("查询天数不应该大于31天");
+                return false;
+            } else {
+                return true;
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="body-box">
+<div class="rhead">
+    <div class="rpos"><@s.m "global.position"/>: <@s.m "channelReport.all"/> - <@s.m "global.list"/></div>
+    <form class="ropt">
+    </form>
+    <div class="clear"></div>
+</div>
+<div class="rhead">
+    <form id="select" action="./v_list.do">
+        <div style="padding-top:5px">
+            日期：<input type="text" name="startTime" value="${startTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:140px"/>&nbsp;至&nbsp;<input type="text" name="endTime" value="${endTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:140px"/>
+            渠道名称：<input type="text" name="name" value="${name!}"/>
+            <input type="button" onclick="check()" value="<@s.m "global.query"/>" />
+            &nbsp;&nbsp;
+            <a href="javascript:void(0)" onclick="channelReportToXls();">导出查询结果</a></td>
+            &nbsp;&nbsp;
+            <a id="clickH" href="" onclick="toCharts()">显示统计图</a>
+        </div>
+    </form>
+    <div class="clear"></div>
+</div>
+<form id="tableForm" method="post">
+    <input type="hidden" name="pageNo" value="${pageNo!}"/>
+    <@p.table value=pagination;page,i,has_next><#rt/>
+        <@p.column code="渠道名称">${page.channelName!}</@p.column><#t/>
+        <@p.column code="订单数量(笔)">${page.totalOrder!}</@p.column><#t/>
+        <@p.column code="销售金额(元)">${page.totalPaiedAmount!}</@p.column><#t/>
+        <@p.column code="退款金额(元)">${page.totalRefundAmount!}</@p.column><#t/>
+        <@p.column code="收款总计(元)">${page.totalSellAmount!}</@p.column><#t/>
+    </@p.table>
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+</html>

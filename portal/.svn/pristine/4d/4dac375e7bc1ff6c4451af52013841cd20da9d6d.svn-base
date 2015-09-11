@@ -1,0 +1,173 @@
+package com.ifunpay.test.security;
+
+import com.ifunpay.util.common.StringUtil;
+import com.ifunpay.util.jackson.JsonUtil;
+import com.ifunpay.util.network.HttpStatusClient;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Created by zhengjiang on 2015/4/7.
+ */
+public class TestReport {
+
+    @Before
+    public void testInit(){
+        System.out.println("-----test init------");
+    }
+
+    @Test
+    public void testMerchant(){
+        Map<String, Object> request = new HashMap<>();
+        request.put("commerceName", "");
+        request.put("startDate", "");
+        request.put("endDate", null);
+        request.put("type", 0); // 0 1 2
+        request.put("start", 0);
+        request.put("size", 50);
+        long time = System.currentTimeMillis();
+        String json = JsonUtil.toJson(request);
+        String md5 = StringUtil.getMd5HexByUtf8Encoding(json + time + appCode);
+        client.addHeader("signature", md5);
+        client.addHeader("timestamp", time + "");
+        client.addHeader("appKey", appKey);
+        String response = client.postJson(baseUrl + "/merchant", json);
+        System.out.println("result------->" + response);
+        Map<String, Object> rePost = JsonUtil.toObject(response);
+        System.out.println("list --->"+rePost.get("reports"));
+        System.out.println("totalCount---->"+rePost.get("totalCount"));
+        Assert.assertEquals(rePost.get("totalCount"), 3);
+    }
+
+    @Test
+    public void testChannel(){
+        Map<String, Object> request = new HashMap<>();
+        request.put("name", "");
+        request.put("startDate", null);
+        request.put("endDate", "");
+        request.put("start", 0);
+        request.put("size", null);
+        long time = System.currentTimeMillis();
+        String json = JsonUtil.toJson(request);
+        String md5 = StringUtil.getMd5HexByUtf8Encoding(json + time + appCode);
+        client.addHeader("signature", md5);
+        client.addHeader("timestamp", time + "");
+        client.addHeader("appKey", appKey);
+        String response = client.postJson(baseUrl + "/channel", json);
+        System.out.println("result---->" + response);
+        Map<String, Object> rePost = JsonUtil.toObject(response);
+        System.out.println("list --->"+rePost.get("reports"));
+        System.out.println("totalCount---->"+rePost.get("totalCount"));
+        Assert.assertEquals(rePost.get("totalCount"), 3);
+    }
+
+    @Test
+    public void testFetchChannelReport() {
+        Map<String, Object> request = new HashMap<>();
+        Map<String, Object> filters = new HashMap<>();
+        filters.put("channelId", "");
+        filters.put("channelName", null);
+        filters.put("startTime", "2015-04-16 8:00:50");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        filters.put("endTime", sdf.format(new Date()));
+        request.putIfAbsent("filters", filters);
+        request.put("start", 1);
+        request.put("size", 2);
+        request.put("sortField", "channelId");
+        request.put("sortOrder", "desc");
+        long time = System.currentTimeMillis();
+        String json = JsonUtil.toJson(request);
+        String md5 = StringUtil.getMd5HexByUtf8Encoding(json + time + appCode);
+        client.addHeader("signature", md5);
+        client.addHeader("timestamp", time + "");
+        client.addHeader("appKey", appKey);
+        String response = client.postJson(baseUrl + "/fetchChannelReport", json);
+        System.out.println(response);
+        Assert.assertNotNull(response);
+    }
+
+    @Test
+    public void testProduct(){
+        Map<String, Object> request = new HashMap<>();
+        request.put("name", "");
+        request.put("startDate", "");
+        request.put("endDate", "");
+        request.put("type", 2);  // 1 2
+        request.put("start", 0);
+        request.put("size", 50);
+        long time = System.currentTimeMillis();
+        String json = JsonUtil.toJson(request);
+        String md5 = StringUtil.getMd5HexByUtf8Encoding(json + time + appCode);
+        client.addHeader("signature", md5);
+        client.addHeader("timestamp", time + "");
+        client.addHeader("appKey", appKey);
+        String response = client.postJson(baseUrl + "/merchandise", json);
+        System.out.println("result---->" + response);
+        Map<String, Object> rePost = JsonUtil.toObject(response);
+        System.out.println("list --->"+rePost.get("reports"));
+        System.out.println("totalCount---->"+rePost.get("totalCount"));
+        Assert.assertEquals(rePost.get("totalCount"), 1);
+    }
+
+    @Test
+    public void testDevice(){
+        Map<String, Object> request = new HashMap<>();
+        request.put("name", "");
+        request.put("startDate", "");
+        request.put("endDate", "");
+        request.put("type", 2);  // 1 2
+        request.put("start", 0);
+        request.put("size", 50);
+        long time = System.currentTimeMillis();
+        String json = JsonUtil.toJson(request);
+        String md5 = StringUtil.getMd5HexByUtf8Encoding(json + time + appCode);
+        client.addHeader("signature", md5);
+        client.addHeader("timestamp", time + "");
+        client.addHeader("appKey", appKey);
+        String response = client.postJson(baseUrl + "/device", json);
+        System.out.println("result---->" + response);
+        Map<String, Object> rePost = JsonUtil.toObject(response);
+        System.out.println("list --->"+rePost.get("reports"));
+        System.out.println("totalCount---->"+rePost.get("totalCount"));
+        Assert.assertEquals(rePost.get("totalCount"), 0);
+    }
+
+    @Test
+    public void testAccount(){
+        Map<String, Object> request = new HashMap<>();
+        request.put("account", "6");
+        request.put("startTime", "");
+        request.put("endTime", "");
+        request.put("start", 0);
+        request.put("size", 50);
+        long time = System.currentTimeMillis();
+        String json = JsonUtil.toJson(request);
+        String md5 = StringUtil.getMd5HexByUtf8Encoding(json + time + appCode);
+        client.addHeader("signature", md5);
+        client.addHeader("timestamp", time + "");
+        client.addHeader("appKey", appKey);
+        String response = client.postJson(baseUrl + "/account", json);
+        System.out.println("result---->" + response);
+        Map<String, Object> rePost = JsonUtil.toObject(response);
+        System.out.println("list --->"+rePost.get("reports"));
+        System.out.println("totalCount---->"+rePost.get("totalCount"));
+        Assert.assertEquals(rePost.get("totalCount"), 0);
+    }
+
+    @After
+    public void testAfter(){
+        System.out.println("-------test finished---------");
+    }
+
+    private static String baseUrl = "http://localhost:8080/mvc/security/report";
+    private static String appKey = "testAppKey";
+    private static String appCode = "testAppCode";
+    private static HttpStatusClient client = new HttpStatusClient();
+}

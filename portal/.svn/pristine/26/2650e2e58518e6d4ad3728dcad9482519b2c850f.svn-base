@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title></title>
+<#include "/jspgou_sys/head.html"/>
+<script type="text/javascript">
+
+    //将form转为AJAX提交
+    function ajaxSubmit(frm, fn) {
+        var dataPara = getFormJson(frm);
+        $.ajax({
+            url: frm.action,
+            type: frm.method,
+            data: dataPara,
+            success: fn
+        });
+    }
+
+    //将form中的值转换为键值对。
+    function getFormJson(frm) {
+        var o = {};
+        var a = $(frm).serializeArray();
+        $.each(a, function () {
+            if (o[this.name] !== undefined) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+
+        return o;
+    }
+$(function() {
+    $("select[name='pro'] option[value='${commerce.pro!}']").attr("selected","selected");
+    initcity('${commerce.pro!}');
+    $("select[name='city'] option[value='${commerce.city!}']").attr("selected","selected");
+
+    var expressList = '${commerce.express!}';
+
+    var expressIterator = expressList.split(',');
+    for(var i =0;i < expressIterator.length;i++){
+        var cur = expressIterator[i];
+        $("input[name='express']:checkbox[value="+cur+"]").attr('checked','true');
+    }
+
+
+    $("#jvForm").validate();
+
+
+   /* $("#jvForm").bind('submit',function(){
+        ajaxSubmit(this, function(data){
+            if("success" == data) {
+                alert("修改商户成功");
+                window.location.href = "v_list.do";
+            }else{
+                alert("修改商户失败");
+            }
+
+        });
+
+        return false;
+    });*/
+});
+</script>
+<style type="text/css">
+.params{padding-top:5px;}
+</style>
+</head>
+<body>
+<div class="body-box">
+<div class="rhead">
+	<div class="rpos"><@s.m "global.position"/>:  商户 - <@s.m "global.edit"/></div>
+	<form class="ropt">
+		<input type="submit" value="<@s.m "global.backToList"/>" onclick="this.form.action='v_list.do';"/>
+	</form>
+	<div class="clear"></div>
+</div>
+    <#assign errorUserExist><@s.m "error.commerceNameExist"/></#assign>
+<@p.form id="jvForm" name="orderform" action="o_update_saved_commerce.do">
+    <input type="hidden" name="id" value ="${commerce.id}" />
+    <@p.text label="商户名称" name="name" required="true" value="${commerce.name}" class="required" vld="{required:true,rangelength:[3,100],remote:'v_check_commerce_name.do?id=${commerce.id}',messages:{remote:'${errorUserExist}'}}" />
+    <@p.select  label="所属渠道"  name="chanIdRela.id" required="true" value="${commerce.chanIdRela.id}" list=channelList listKey="id" listValue="channelName" />
+
+    <@p.text label="联系人" name="linkMan" required="true" value="${commerce.linkMan!}"  class="required" maxlength="100"/>
+    <@p.text label="联系电话" name="mobilePhone" required="true" value="${commerce.mobilePhone!}"  class="required" maxlength="100"/>
+
+   <!-- <@p.select  label="状态"  name="status" value="${commerce.status!}" required="true" list={"1":"启用","2":"禁用"} />
+-->
+    <@p.text label="清算账号" name="account" value="${commerce.account!}"   maxlength="100"/>
+    <@p.text label="清算周期" name="roundDay" value="${commerce.roundDay!}"  maxlength="100"/>
+    <@p.text label="清算费率" name="rate" value="${commerce.rate!}"  maxlength="100"/>
+    <@p.text label="描述" name="description" value="${commerce.description!}"  maxlength="100"/>
+
+    <tr>
+        <td width="20%" class="pn-flabel pn-flabel-h">
+            地址:
+        </td>
+        <td width="80%" class="pn-fcontent">
+            <select onchange="initcity();" name="pro" id="pro" >
+                <SCRIPT>creatprovince();</SCRIPT>
+            </select>
+            <select name="city" class="inp_text" id="city">
+                <option value="">选择城市</option>
+            </select>
+            详细地址:<input type="text" name="detailed" value="${commerce.detailed!}" />
+        </td>
+    </tr>
+    <!--<@p.checkboxlist label="物流" name="express" list=logisticsList listKey="id" listValue="name" onclick="checkedThis(this);" /><@p.tr/>-->
+    <@p.td>
+
+    <input type="hidden" name="category" value="1"/>
+	<@p.submit code="global.submit"/> &nbsp; <@p.reset code="global.reset"/>
+   </@p.td>
+
+</@p.form>
+</div>
+</body>
+</html>

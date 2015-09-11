@@ -1,0 +1,13 @@
+/AccountExpiredException.java/1.1/Tue Jul  8 01:06:12 2014//
+/AccountStatusException.java/1.1/Tue Jul  8 01:06:12 2014//
+/AuthenticationException.java/1.1/Tue Jul  8 01:06:12 2014//
+/BadCredentialsException.java/1.1/Tue Jul  8 01:06:12 2014//
+/CredentialsExpiredException.java/1.1/Tue Jul  8 01:06:12 2014//
+/DisabledException.java/1.1/Tue Jul  8 01:06:12 2014//
+/LockedException.java/1.1/Tue Jul  8 01:06:12 2014//
+/UserNotAcitveException.java/1.1/Tue Jul  8 01:06:12 2014//
+/UsernameNotFoundException.java/1.1/Tue Jul  8 01:06:12 2014//
+D/annotation////
+D/encoder////
+D/rememberme////
+D/userdetails////

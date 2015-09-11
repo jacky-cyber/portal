@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+
+        $(document).ready(function(){
+            $("table tr").mousemove(function(){
+                $(this).css({"background-color":"#84ccc9"});
+            });
+            $("table tr").mouseout(function(){
+                $(this).css({"background-color":"white"});
+            });
+        });
+
+        function getTableForm() {
+            return document.getElementById('tableForm');
+        }
+
+        function productReportByToXls() {
+            var flag=checkDate();
+            if(flag) {
+                var st=$("input[name='startTime']").val();
+                var et=$("input[name='endTime']").val();
+                var pn=$("input[name='productName']").val();
+                var cn=$("input[name='commerceName']").val();
+                window.open("../productReportAmountToXls.do?startTime="+st+"&endTime="+et+"&productName="+pn+"&commerceName="+cn, '_self');
+            }
+        }
+        function check() {
+            var stm=new Date(Date.parse($("input[name='startTime']").val()));
+            var etm=new Date(Date.parse($("input[name='endTime']").val()));
+            var diff=parseInt((etm.getTime() - stm.getTime()) / (1000 * 60 * 60 * 24));
+            if(31 < diff) {
+                alert("查询天数不应该大于31天");
+            } else {
+                $("#select").submit();
+            }
+        }
+
+        function toCharts() {
+            var flag=checkDate();
+            if(flag){
+                var st=$("input[name='startTime']").val();
+                var et=$("input[name='endTime']").val();
+                var pn=$("input[name='productName']").val();
+                var cn=$("input[name='commerceName']").val();
+                var urlStr="../productReportByRMBChart/v_list.do?startTime="+st+"&endTime="+et+"&productName="+pn+"&commerceName="+cn;
+                $("#clickH").attr("href",urlStr);
+            }
+        }
+
+        function checkDate() {
+            var stm=new Date(Date.parse($("input[name='startTime']").val()));
+            var etm=new Date(Date.parse($("input[name='endTime']").val()));
+            var diff=parseInt((etm.getTime() - stm.getTime()) / (1000 * 60 * 60 * 24));
+            if(31 < diff) {
+                alert("查询天数不应该大于31天");
+                return false;
+            } else {
+                return true;
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>: <@s.m "productReport.all"/> - <@s.m "global.list"/></div>
+        <form class="ropt">
+        </form>
+        <div class="clear"></div>
+    </div>
+    <div class="rhead">
+        <form id="select" action="./v_list.do">
+            <div style="padding-top:5px">
+                日期：<input type="text" name="startTime" value="${startTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})" style="width:100px"/>&nbsp;至&nbsp;<input type="text" name="endTime" value="${endTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})" style="width:100px"/>
+                商品名称：<input type="text" name="productName" value="${productName!}"/>
+                商户名称：<input type="text" name="commerceName" value="${commerceName!}"/>
+                <input type="button" onclick="check()" value="<@s.m "global.query"/>" />
+                &nbsp;&nbsp;
+                <a href="../productReport/v_list.do">切换为销售数量</a>
+                &nbsp;&nbsp;
+                <a href="javascript:void(0)" onclick="productReportByToXls();">导出查询结果</a></td>
+                &nbsp;&nbsp;
+                <a id="clickH" href="" onclick="toCharts()">显示统计图</a>
+            </div>
+        </form>
+        <div class="clear"></div>
+    </div>
+    <form id="tableForm" method="post">
+        <input type="hidden" name="pageNo" value="${pageNo!}"/>
+        <@p.table value=pagination;page,i,has_next><#rt/>
+        <@p.column code="商户名称">${page.commerceName!}</@p.column><#t/>
+        <@p.column code="商品名称">${page.productName!}</@p.column><#t/>
+    <@p.column code="商品销售额(元)">${page.totalAmount!}</@p.column><#t/>
+<@p.column code="一拍支付销售(元)">${page.aShotToPay!}</@p.column><#t/>
+<@p.column code="二维码支付支付销售(元)">${page.qrCode!}</@p.column><#t/>
+<@p.column code="插卡支付销售(元)">${page.insertCard!}</@p.column><#t/>
+<@p.column code="闪付销售(元)">${page.flashPay!}</@p.column><#t/>
+</@p.table>
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+</html>

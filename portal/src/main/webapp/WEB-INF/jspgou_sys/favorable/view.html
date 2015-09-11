@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+        $(function() {
+            $("#jvForm").validate();
+        });
+    </script>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>:优惠策略管理  - <@s.m "global.edit"/></div>
+        <form class="ropt">
+            <input type="submit" value="<@s.m "global.backToList"/>" onclick="this.form.action='v_list.do';"/>
+        </form>
+        <div class="clear"></div>
+    </div>
+    <#assign fieldExist><@s.m "error.fieldExist"/></#assign>
+    <@p.form id="jvForm" action="o_update.do">
+    <@p.text  value=favorable.id name="id" style="display:none" /><@p.tr/>
+    <@p.text  label="名称" value=favorable.name name="name" width="100" readonly="true" /><@p.tr/>
+    <@p.text label="渠道" name="channelName" value=favorable.channelName  width="100" readonly="true"  />
+    <input type="hidden" name="channelId" value="${favorable.channelId!}"/>
+    <@p.tr/>
+    <@p.radio label="限购范围" colspan="2" width="100" name="area"  disabled="true" list={"1":"渠道多商品","2":"单个商品","3":"终端多商品","4":"终端单商品"} value=favorable.area helpPosition="2"  required="true" class="required" /><@p.tr/>
+    <@p.radio label="限购类型" colspan="2" width="100" name="favorableType"  disabled="true"  list={"1":"固定周期优惠","2":"固定月日优惠","3":"自定义周期限购","4":"前N笔优惠"} value=favorable.favorableType onclick="change(value)" required="true" class="required" /><@p.tr/>
+    <@p.radio label="限购数量" colspan="2" width="100" name="amountType"  disabled="true" list={"1":"订单数","2":"商品数"} value=favorable.amountType onclick="change1(value)" required="true" class="required" /><@p.tr/>
+    <@p.radio label="限购方式" colspan="2" width="100" name="manner"  disabled="true" list={"0":"登录","1":"非登录"} value=favorable.manner onclick="change(value)" required="true" class="required" /><@p.tr/>
+    <@p.text label="限购订单数(0-1000)" colspan="2" width="100"readonly="true" name="orderAmount"  maxlength="100" value=favorable.orderAmount class="number" /><@p.tr/>
+    <@p.text label="限购商品数(0-100)" colspan="2" width="100" readonly="true" name="productAmount"  maxlength="100" value=favorable.productAmount class="number" /><@p.tr/>
+    <@p.text label="每周优惠日(以;隔开 如1;2;3)" colspan="2" readonly="true" width="100" name="weeks" maxlength="100" value=favorable.weeks /><@p.tr/>
+    <@p.text label="每月优惠日(以;隔开 如1;2;3)"  colspan="2" readonly="true" width="100" name="months" value=favorable.months  maxlength="10" /><@p.tr/>
+    <@p.text label="自定义周期(单位/天0-100)" colspan="2" readonly="true" width="100" name="automatic"  maxlength="100" value=favorable.automatic class="number" /><@p.tr/>
+    <@p.text label="前N笔优惠" colspan="2" width="100" readonly="true" name="beforeN"  maxlength="100" value=favorable.beforeN  class="number" />
+    <@p.checkbox label="是否恢复结算价" name="regainPrice" readonly="true" value=favorable.regainPrice  style="display:none"/>
+    <@p.tr/>
+    <@p.text label="开始日期"   readonly="true" colspan="2" width="100" name="startTime"value=favorable.startTime class="Wdate required" required="true" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:168px"/><@p.tr/>
+    <@p.text label="结束日期" readonly="true"  colspan="2" width="100" name="endTime" value=favorable.endTime  class="Wdate required" required="true" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:168px"/><@p.tr/>
+    <@p.text label="备注" name="remark"  value=favorable.remark  colspan="2" maxlength="100" width="100"  required="false"  /><@p.tr/>
+    <@p.td colspan="2">
+</@p.td><@p.tr/>
+
+</@p.form>
+</div>
+<script type="text/javascript">
+
+    function change(va) {
+        if(1==va){
+            $("[name='beforeN']").hide().val(0);
+            $("[name='weeks']").show();
+            $("[name='months']").hide().val("");
+            $("[name='automatic']").hide().val("");
+
+        }else if(2==va){
+            $("[name='beforeN']").hide().val(0);
+            $("[name='weeks']").hide().val("");
+            $("[name='months']").show();
+            $("[name='automatic']").hide().val("");
+        }else if(3==va){
+            $("[name='automatic']").show();
+            $("[name='weeks']").hide().val("");
+            $("[name='months']").hide().val("");
+            $("[name='beforeN']").hide().val(0);
+        }else if(4==va){
+            $("[name='beforeN']").show();
+            $("[name='weeks']").hide().val("");
+            $("[name='months']").hide().val("");
+            $("[name='automatic']").hide().val("");
+        }
+    }
+    function change1(va) {
+        if(1==va){
+            $("[name='orderAmount']").show();
+            $("[name='productAmount']").hide().val(0);
+        }else if(2==va) {
+            $("[name='orderAmount']").hide().val(0);
+            $("[name='productAmount']").show();
+        }
+    }
+    var favorableType='${favorable.favorableType!}';
+    change(favorableType);
+    var amountType = '${favorable.amountType!}'
+    change1(amountType);
+</script>
+</body>
+</html>

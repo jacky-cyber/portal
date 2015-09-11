@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript" src="${base}/r/gou/JScharts/sources/jscharts.js"></script>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>: <@s.m "productReport.all"/> - <@s.m "settlement.picture"/></div>
+        <form class="ropt">
+        </form>
+        <div class="clear"></div>
+    </div>
+    <div id="barGraph" style="float: left">Please input right data...</div>
+    <div id="pieGraph" style="float: left">Please input right data...</div>
+</div>
+
+<script type="text/javascript">
+
+    var pn='${productName}';
+    pArr=pn.split(",");
+    var sa='${scanPayAmount}';
+    sArr=sa.split(",");
+    var qa='${qrPayAmount}';
+    qArr=qa.split(",");
+    var ua='${unionPayAmount}';
+    uArr=ua.split(",");
+    var qka='${quickPayAmount}';
+    qkArr=qka.split(",");
+
+    var barData = new Array();
+    for(var i=0; i<pArr.length; i++) {
+        if(NaN != pArr[i] && '' != pArr[i]) {
+            var tmp=[pArr[i] , Number(sArr[i]), Number(qArr[i]), Number(uArr[i]), Number(qkArr[i])];
+            barData.push(tmp);
+        }
+    }
+
+    if(NaN != barData && '' != barData){
+        var barChart = new JSChart('barGraph', 'bar');
+        barChart.setDataArray(barData);
+        barChart.setTitle('商品销售统计');
+        barChart.setTitleColor('#8E8E8E');
+        barChart.setAxisNameX('');
+        barChart.setAxisNameY('');
+        barChart.setAxisNameFontSize(16);
+        barChart.setAxisNameColor('#999');
+        barChart.setAxisValuesAngle(30);
+        barChart.setAxisValuesColor('#777');
+        barChart.setAxisColor('#B5B5B5');
+        barChart.setAxisWidth(1);
+        barChart.setBarValuesColor('#2F6D99');
+        barChart.setAxisPaddingTop(60);
+        barChart.setAxisPaddingBottom(60);
+        barChart.setAxisPaddingLeft(45);
+        barChart.setTitleFontSize(11);
+        barChart.setBarColor('#2D6B96', 1);
+        barChart.setBarColor('#9CCEF0', 2);
+        barChart.setBarBorderWidth(0);
+        barChart.setBarSpacingRatio(50);
+        barChart.setBarOpacity(0.9);
+        barChart.setFlagRadius(6);
+        barChart.setTooltipPosition('nw');
+        barChart.setTooltipOffset(3);
+        barChart.setLegendShow(true);
+        barChart.setLegendPosition('right top');
+        barChart.setLegendForBar(1, '扫码支付销售(元)');
+        barChart.setLegendForBar(2, '小额支付销售(元)');
+        barChart.setLegendForBar(3, '银联支付销售(元)');
+        barChart.setLegendForBar(4, '闪付支付销售(元)');
+        barChart.setSize(616, 321);
+        barChart.setGridColor('#C6C6C6');
+        barChart.draw();
+    }
+
+    var colorsEx = ['#A5DBFC', '#CDE8FA', '#D9F0FA', '#0099F9', '#1BA4F9', '#41B2FA', '#63C1FA', '#83CDFA'];
+    var pieData = new Array();
+    var ta='${totalAmount}';
+    taArr=ta.split(",");
+    var pieColors = [];
+    var sum=0;
+    for(var i=0; i<taArr.length; i++) {
+        sum=sum+Number(taArr[i]);
+    }
+
+    for(var i=0; i<pArr.length; i++) {
+        if(NaN != pArr[i] && '' != pArr[i]){
+            var tmp1=[pArr[i] , Math.round((Number(taArr[i])*100)*10/sum)/10];
+            pieData.push(tmp1);
+            if(i<colorsEx.length) {
+                pieColors.push(colorsEx[i]);
+            } else {
+                pieColors.push(colorsEx[i-colorsEx.length]);
+            }
+        }
+    }
+
+    if(NaN != pieData && '' != pieData){
+        var pieChart = new JSChart('pieGraph', 'pie');
+        pieChart.setDataArray(pieData);
+        pieChart.colorizePie(pieColors);
+        pieChart.setTitle('商品营利比(%)');
+        pieChart.setTitleColor('#8E8E8E');
+        pieChart.setTitleFontSize(11);
+        pieChart.setTextPaddingTop(30);
+        pieChart.setPieUnitsColor('#8F8F8F');
+        pieChart.setPieValuesColor('#6E6E6E');
+        pieChart.setSize(616, 321);
+        pieChart.setPiePosition(308, 190);
+        pieChart.setPieRadius(85);
+        pieChart.setBackgroundImage('${base}/r/gou/JScharts/sources/img/chart_bg.jpg');
+        pieChart.draw();
+    }
+</script>
+</body>
+</html>

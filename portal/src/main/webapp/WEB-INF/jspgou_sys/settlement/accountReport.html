@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <#include "/jspgou_sys/head.html"/>
+    <script type="text/javascript">
+
+        $(document).ready(function(){
+            $("table tr").mousemove(function(){
+                $(this).css({"background-color":"#84ccc9"});
+            });
+            $("table tr").mouseout(function(){
+                $(this).css({"background-color":"white"});
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="body-box">
+    <div class="rhead">
+        <div class="rpos"><@s.m "global.position"/>: <@s.m "accountReport.all"/> - <@s.m "global.list"/></div>
+        <form class="ropt">
+        </form>
+        <div class="clear"></div>
+    </div>
+    <div class="rhead">
+        <form id="select" action="./v_list.do">
+            <div style="padding-top:5px">
+                日期：<input type="text" name="startTime" value="${startTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})" style="width:100px"/>&nbsp;至&nbsp;<input type="text" name="endTime" value="${endTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd'})" style="width:100px"/>
+                卡号：<input type="text" name="account" value="${account!}"/>
+                <input type="submit" value="<@s.m "global.query"/>" />
+            </div>
+        </form>
+        <div class="clear"></div>
+    </div>
+    <form id="tableForm" method="post">
+        <input type="hidden" name="pageNo" value="${pageNo!}"/>
+        <@p.table value=pagination;page,i,has_next><#rt/>
+        <@p.column code="卡号">${page.account!}</@p.column><#t/>
+        <@p.column code="时间（天）">${page.day!}</@p.column><#t/>
+        <@p.column code="交易额（单位：元）">${page.amount!}</@p.column><#t/>
+        </@p.table>
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+</html>

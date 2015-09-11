@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+	"
+       default-lazy-init="true">
+    <bean id="clientSettings" class="com.ifunpay.front.ClientSettings" lazy-init="false">
+        <property name="frontServerBaseUrl" value="http://192.168.6.10:58080"/>
+        <property name="appCode" value="testCode"></property>
+        <property name="appKey" value="testApp"></property>
+    </bean>
+    <bean id="socketAdapterClient" class="com.ifunpay.front.SocketAdapterClient">
+        <property name="httpClient" ref="httpStatusClient"/>
+        <property name="encoding" value="UTF-8"/>
+    </bean>
+
+    <bean id="terminalFrontRemoteControl" class="com.ifunpay.front.TerminalFrontRemoteControl">
+        <property name="httpClient" ref="httpStatusClient"></property>
+    </bean>
+    <bean id="httpStatusClient" class="com.ifunpay.util.network.HttpStatusClient" scope="prototype"></bean>
+
+
+    <bean class="com.ifunpay.util.sdk.ClientConfig" lazy-init="false">
+        <property name="portalBaseUrl" value="http://192.168.6.10:34808/"/>
+        <property name="portalAppCode" value="testAppCode"/>
+        <property name="portalAppKey" value="testAppKey"/>
+        <property name="smsBaseUrl" value="http://sms.ifunpay.com/"/>
+        <property name="smsAppCode" value="B0864172-4048-40A1-8254-9E0265E637E3"/>
+        <property name="smsAppKey" value="000002"/>
+        <property name="omsBaseUrl" value="http://192.168.6.10:52808/"/>
+        <property name="omsAppKey" value="testAppKey"/>
+        <property name="omsAppCode" value="testAppCode"/>
+    </bean>
+    <bean id="smsClient" class="com.ifunpay.sms.sdk.SmsClient">
+        <property name="baseUrl" value="http://sms.ifunpay.com/"/>
+        <property name="appId" value="000002"/>
+        <property name="appKey" value="B0864172-4048-40A1-8254-9E0265E637E3"/>
+    </bean>
+
+    <bean id="securityMap" class="java.util.HashMap">
+        <constructor-arg index="0">
+            <map>
+                <entry key="testAppKey" value="testAppCode"/>
+                <entry key="000002" value="123456" />
+            </map>
+        </constructor-arg>
+    </bean>
+
+</beans>

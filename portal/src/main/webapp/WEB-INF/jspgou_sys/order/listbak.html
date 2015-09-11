@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title></title>
+<#include "/jspgou_sys/head.html"/>
+<script type="text/javascript">
+function getTableForm() {
+	return document.getElementById('tableForm');
+}
+function optDelete() {
+	if(Pn.checkedCount('ids')<=0) {
+		alert("<@s.m 'error.checkRecord'/>");
+		return;
+	}
+	if(!confirm("<@s.m 'global.confirm.delete'/>")) {
+		return;
+	}
+	var f = getTableForm();
+	f.action="o_delete.do";
+	f.submit();
+}
+$(document).ready(function(){
+    $("table tr").mousemove(function(){
+        $(this).css({"background-color":"#84ccc9"});
+    });
+    $("table tr").mouseout(function(){
+        $(this).css({"background-color":"white"});
+    });
+});
+
+function orderReportToXls() {
+
+        var st=$("input[name='startTime']").val();
+        var et=$("input[name='endTime']").val();
+    var code = $("input[name='code']").val();
+    var phone = $("input[name='phone']").val();
+    var commerceName = $("input[name='commerceName']").val();
+    var channelName = $("input[name='channelName']").val();
+    var productName = $("input[name='productName']").val();
+    //var status = $("select[name='status']").val();
+    var shippingStatus = $("select[name='shippingStatus']").val();
+    var paymentId = $("select[name='paymentId']").val();
+    var paymentStatus = $("select[name='paymentStatus']").val();
+        window.open("../orderReportToXls.do?startTime="+st+"&endTime="+et+"&commerceName="+commerceName+"&channelName="+channelName+"&productName="+productName+"&code="+code+"&phone="+phone+"&shippingStatus="+shippingStatus+"&paymentId="+paymentId+"&paymentStatus="+paymentStatus, '_self');
+
+}
+
+</script>
+</head>
+<body>
+<div class="body-box">
+<div class="rhead">
+	<div class="rpos"><@s.m "global.position"/>: <@s.m "order.function.all"/> - <@s.m "global.list"/></div>
+	<form class="ropt">
+	</form>
+	<div class="clear"></div>
+</div>
+<div class="rhead">
+	<form action="v_list.do">
+	 <div style="padding-top:5px">
+	 订单编号: <input type="text" name="code" value="${code!}" style="width:100px"/>
+         手机号码: <input type="text" name="phone" value="${phone!}" style="width:100px"/>
+         渠道名称: <input type="text" name="channelName" value="${channelName!}" style="width:100px"/>
+         商户名称: <input type="text" name="commerceName" value="${commerceName!}" style="width:100px"/>
+         商品名称: <input type="text" name="productName" value="${productName!}" style="width:100px"/>
+         <!-- 收货人: <input type="text" name="userName" value="${userName!}" style="width:100px"/>  -->
+	下单日期:<input type="text" name="startTime" value="${startTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:100px"/>&nbsp;至&nbsp;<input type="text" name="endTime" value="${endTime!}" class="Wdate" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})" style="width:100px"/>
+	  <!--<select name="status">
+      	<option value="">&#45;&#45;订单状态&#45;&#45;</option>
+        <option value="1" <#if status??><#if 1==status>selected="selected"</#if></#if>>未确认</option>
+        <option value="2" <#if status??><#if 2==status>selected="selected"</#if></#if>>已确认</option>
+        <option value="3" <#if status??><#if 3==status>selected="selected"</#if></#if>>已取消</option>
+        <option value="3" <#if status??><#if 4==status>selected="selected"</#if></#if>>已完成</option>
+      </select>-->
+       <select name="paymentStatus">
+      	<option value="">--支付状态--</option>
+        <option value="1" <#if paymentStatus??><#if 1==paymentStatus>selected="selected"</#if></#if>>未支付</option>
+        <option value="2" <#if paymentStatus??><#if 2==paymentStatus>selected="selected"</#if></#if>>已支付</option>
+        <option value="3" <#if paymentStatus??><#if 3==paymentStatus>selected="selected"</#if></#if>>已退款</option>
+           <option value="4" <#if paymentStatus??><#if 4==paymentStatus>selected="selected"</#if></#if>>退款失败</option>
+
+      </select>
+         <select name="shippingStatus">
+      	<option value="">--配送状态--</option>
+        <option value="1" <#if shippingStatus??><#if 1==shippingStatus>selected="selected"</#if></#if>>未发货</option>
+        <option value="2" <#if shippingStatus??><#if 2==shippingStatus>selected="selected"</#if></#if>>已发货</option>
+        <option value="3" <#if shippingStatus??><#if 3==shippingStatus>selected="selected"</#if></#if>>已退货</option>
+             <option value="4" <#if shippingStatus??><#if 4==shippingStatus>selected="selected"</#if></#if>>已签收</option>
+             <option value="5" <#if shippingStatus??><#if 5==shippingStatus>selected="selected"</#if></#if>>出货失败</option>
+      </select>
+      <select name="paymentId">
+      	<option value="">--支付方式--</option>
+        <#list paymentList as payment>
+        <option value="${payment.id}"<#if paymentId??> <#if paymentId==payment.id>selected="selected"</#if></#if>>${payment.name!}</option>
+        </#list>  
+      </select>
+     <!-- <select name="shoppingId">
+         <option value="">--配送方式--</option>
+         <#list shippingList as shopping>
+         <option value="${shopping.id}"<#if shoppingId??> <#if shoppingId==shopping.id>selected="selected"</#if></#if>>${shopping.name!}</option>
+         </#list>  
+       </select>-->
+       <input type="submit"  value="<@s.m "global.query"/>" />
+         &nbsp;&nbsp;
+         <a href="javascript:void(0)" onclick="orderReportToXls();">导出查询结果</a></td>
+		</div>
+	</form>
+
+	<div class="clear"></div>
+</div>
+<form id="tableForm" method="post">
+<input type="hidden" name="pageNo" value="${pageNo!}"/>
+    <input type="hidden" name="code" value="${code!}"/>
+    <input type="hidden" name="paymentId" value="${paymentId!}"/>
+    <input type="hidden" name="shoppingId" value="${shoppingId!}"/>
+    <input type="hidden" name="paymentStatus" value="${paymentStatus!}"/>
+    <input type="hidden" name="shippingStatus" value="${shippingStatus!}"/>
+    <input type="hidden" name="startTime" value="${startTime!}"/>
+    <input type="hidden" name="endTime" value="${endTime!}"/>
+    <input type="hidden" name="status" value="${status!}"/>
+<@p.table value=pagination;order,i,has_next><#rt/>
+	<@p.column title="<input type='checkbox' onclick='Pn.checkbox(\"ids\",this.checked)'/>" width="20">
+		<input type='checkbox' name='ids' value='${order.id}'/><#t/>
+	</@p.column><#t/>
+    <@p.column code="订单编号"><a href="v_view.do?id=${order.id}&pageNo=${pageNo!}">${order.code}</a></@p.column><#t/>
+    <@p.column code="手机号码">${order.receivePhone!}</@p.column><#t/>
+    <@p.column code="渠道"><#if order.product??>${order.product.channelName!}</#if></@p.column><#t/>
+    <@p.column code="商户"><#if order.product??>${order.product.commerceName!}</#if></@p.column><#t/>
+    <@p.column code="商品名称">${order.product.name!}</@p.column><#t/>
+	<@p.column code="order.total" align="left">￥${order.total/100!}<!--<br/>(含运费:${order.freight!0})--></@p.column><#t/>
+	<@p.column code="order.createTime" style="width:100px;">${order.createTime}</@p.column><#t/>
+	<@p.column code="order.payment"><#if order.payment??>${order.payment.name!}</#if></@p.column><#t/>
+	<@p.column code="order.paymentStatus"><@s.m "order.paymentStatus.${order.paymentStatus}"/></@p.column><#t/>
+	<@p.column code="order.shippingStatus"><@s.m "order.shippingStatus.${order.shippingStatus}"/></@p.column><#t/>
+    <@p.column code="order.orderType.status"><@s.m "order.orderType.status.${order.orderType}"/></@p.column><#t/>
+    <@p.column code="order.status"><@s.m "order.status.${order.status}"/></@p.column><#t/>
+	<@p.column code="global.operate" align="left">
+		<a href="v_edit.do?id=${order.id}&pageNo=${pageNo!}"><@s.m "global.edit"/></a> | <#rt/>
+		<a href="o_delete.do?ids=${order.id}&pageNo=${pageNo!}" onclick="if(!confirm('<@s.m "global.confirm.delete"/>')) {return false;}"><@s.m "global.delete"/></a><#t/>
+	</@p.column><#t/>
+</@p.table>
+<div><input type="button" value="<@s.m "global.delete"/>" onclick="optDelete();"/></div>
+</form>
+</div>
+<#include "/common/alert_message.html"/>
+</body>
+</html>

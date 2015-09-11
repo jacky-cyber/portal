@@ -1,0 +1,27 @@
+package com.ifunpay.portal.enums;
+
+/**
+ * Created by CongLong Xie on 2015/7/23.
+ */
+public enum ShipmentStatusEnum {
+    NotShip("未发货"),
+    Shipped("已发货"),
+    ReturnGoods("已退货"),
+    Delivery("已签收"),
+    ShipError("出货失败"),
+    ;
+
+    ShipmentStatusEnum(String displayName) {
+        this.displayName = displayName;
+    }
+
+    String displayName;
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+}

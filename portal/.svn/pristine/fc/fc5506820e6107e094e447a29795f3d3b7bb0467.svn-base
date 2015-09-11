@@ -1,0 +1,292 @@
+package com.jspgou.cms.action.admin.main;
+
+import com.ifunpay.portal.entity.Channel;
+import com.ifunpay.portal.entity.Commerce;
+import com.ifunpay.portal.service.commerce.ChannelService;
+import com.ifunpay.portal.service.commerce.CommerceService;
+import com.jspgou.cms.entity.ShopAdmin;
+import com.jspgou.cms.manager.ShopAdminMng;
+import com.jspgou.common.page.Pagination;
+import com.jspgou.common.web.CookieUtils;
+import com.jspgou.common.web.ResponseUtils;
+import com.jspgou.common.web.session.SessionProvider;
+import com.jspgou.core.entity.Role;
+import com.jspgou.core.entity.Website;
+import com.jspgou.core.manager.AdminMng;
+import com.jspgou.core.manager.RoleMng;
+import com.jspgou.core.manager.UserMng;
+import com.jspgou.core.web.SiteUtils;
+import com.jspgou.core.web.WebErrors;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import static com.jspgou.common.page.SimplePage.cpn;
+
+/**
+* This class should preserve.
+* @preserve
+*/
+@Controller
+public class ShopAdminAct {
+	private static final Logger log = LoggerFactory
+			.getLogger(ShopAdminAct.class);
+    public static ArrayList<HashMap<String,String>> channel= new ArrayList<HashMap<String,String>>();
+    public static ArrayList<HashMap<String,String>> commerce=new ArrayList<HashMap<String,String>>();
+
+	@RequestMapping("/admin/v_list.do")
+	public String list(Integer pageNo, HttpServletRequest request,
+			ModelMap model) {
+		Pagination pagination = manager.getPage(SiteUtils.getWebId(request),cpn(pageNo), CookieUtils.getPageSize(request));
+		model.addAttribute(pagination);
+		return "admin/list";
+	}
+
+	@RequestMapping("/admin/v_add.do")
+	public String add(ModelMap model,HttpServletRequest request) {
+		List<Role> roleList = roleMng.getList();
+		model.addAttribute("roleList", roleList);
+
+
+
+        java.util.List<Channel> channelList = channelService.getAllChannel();
+        Channel chan = new Channel();
+		chan.setId(Long.parseLong("-1"));
+        chan.setChannelName("请选择");
+        channelList.add(0,chan);
+
+
+        java.util.List<Commerce> commerceList = commerceService.getAllCommerces();
+        Commerce com = new Commerce();
+        com.setId(new Long(0));
+        com.setName("请选择");
+        commerceList.add(0,com);
+
+        model.addAttribute("channelList", channelList);
+        model.addAttribute("commerceList", commerceList);
+		return "admin/add";
+	}
+
+
+    @RequestMapping("/admin/v_channel_add.do")
+    public String addForChannel(String channelId,ModelMap model,HttpServletRequest request) {
+        List<Role> roleList = roleMng.getList();
+        model.addAttribute("roleList", roleList);
+
+       log.debug("channelId =="+channelId);
+        model.addAttribute("channelId",channelId);
+
+        java.util.List<Channel> channelList = channelService.getAllChannel();
+        Channel chan = new Channel();
+		chan.setId(Long.parseLong("-1"));
+        chan.setChannelName("请选择");
+        channelList.add(0,chan);
+
+
+        java.util.List<Commerce> commerceList = commerceService.getAllCommerces();
+        Commerce com = new Commerce();
+        com.setId(new Long(0));
+        com.setName("请选择");
+        commerceList.add(0,com);
+
+        model.addAttribute("channelList", channelList);
+        model.addAttribute("commerceList", commerceList);
+        return "admin/channel_add";
+    }
+
+	@RequestMapping("/admin/v_edit.do")
+	public String edit(Long id, HttpServletRequest request, ModelMap model) {
+		WebErrors errors = validateEdit(id, request);
+		if (errors.hasErrors()) {
+			return errors.showErrorPage(model);
+		}
+		List<Role> roleList = roleMng.getList();
+		model.addAttribute("roleList", roleList);
+		model.addAttribute("admin", manager.findById(id));
+		model.addAttribute("channel_id", manager.findAdminId(manager.findById(id).getAdmin().getId()).getUser().getChannelId());
+		model.addAttribute("roleIds", manager.findById(id).getAdmin().getRoleIds());
+            java.util.List<Channel> channelList = channelService.getAllChannel();
+            java.util.List<Commerce> commerceList = commerceService.getAllCommerces();
+            model.addAttribute("channelList", channelList);
+            model.addAttribute("commerceList", commerceList);
+		return "admin/edit";
+	}
+
+	@RequestMapping("/admin/o_save.do")
+	public String save(ShopAdmin bean, String username, String password,Boolean viewonlyAdmin,
+			String email, Boolean disabled,Integer[] roleIds,String channelId,String commerceId,
+			HttpServletRequest request, ModelMap model) {
+		WebErrors errors = validateSave(bean, request);
+		if (errors.hasErrors()) {
+			return errors.showErrorPage(model);
+		}
+		Website web = SiteUtils.getWeb(request);
+        String channelName=null;
+        String commerceName=null;
+
+        if(!"".equals(commerceId)) {
+            log.debug("commerceId = "+commerceId);
+            Commerce commerceIndex = commerceService.getCommerceById(Long.parseLong(commerceId));
+            if(commerceIndex!=null){
+                log.debug("set value to commerce name");
+                commerceName = commerceIndex.getName();
+            }
+
+
+        }
+
+        if(!"".equals(channelId)) {
+            Channel channelIndex = channelService.getChannelByChannelId(Long.parseLong(channelId));
+            if(channelIndex!=null){
+                log.debug("set value to channel name");
+                channelName = channelIndex.getChannelName();
+            }
+
+        }
+		bean = manager.register(username, password,viewonlyAdmin, email, request.getRemoteAddr(), disabled, web.getId(), bean,channelId,channelName,commerceId,commerceName,null);
+		adminMng.addRole(bean.getAdmin(), roleIds);
+		log.info("save ShopAdmin id={}", bean.getId());
+		return "redirect:v_list.do";
+	}
+
+	@RequestMapping("/admin/o_update.do")
+	public String update(ShopAdmin bean, String password, Boolean viewonlyAdmin,String email,
+			Boolean disabled, Integer[] roleIds, Integer pageNo,String channelId,String commerceId,
+			HttpServletRequest request, ModelMap model) {
+		WebErrors errors = validateUpdate(bean.getId(),request);
+		if (errors.hasErrors()) {
+			return errors.showErrorPage(model);
+		}
+        String channelName="";
+        String commerceName="";
+        if(!"".equals(commerceId)) {
+            for (int i = 0; i < commerce.size(); i++) {
+                if (commerceId.equals(commerce.get(i).get("commerceId"))) {
+                    commerceName = commerce.get(i).get("commerceName");
+                    channelId = commerce.get(i).get("channelId");
+                    channelName = commerce.get(i).get("channelName");
+                }
+            }
+        }else {
+            if(!"".equals(channelId)) {
+                for (int i = 0; i < channel.size(); i++) {
+                    if (channelId.equals(channel.get(i).get("channelId"))) {
+                        channelName = channel.get(i).get("channelName");
+                    }
+                }
+            }
+        }
+		bean = manager.update(bean, password, disabled, email,viewonlyAdmin,channelId,channelName,commerceId,commerceName,null);
+		adminMng.updateRole(bean.getAdmin(),roleIds);
+		log.info("update ShopAdmin id={}.", bean.getId());
+		return list(pageNo, request, model);
+	}
+
+	@RequestMapping("/admin/o_delete.do")
+	public String delete(Long[] ids, Integer pageNo,
+			HttpServletRequest request, ModelMap model) {
+		WebErrors errors = validateDelete(ids, request);
+		if (errors.hasErrors()) {
+			return errors.showErrorPage(model);
+		}
+		ShopAdmin[] beans = manager.deleteByIds(ids);
+		for (ShopAdmin bean : beans) {
+			log.info("delete ShopAdmin id={}", bean.getId());
+		}
+		return list(pageNo, request, model);
+	}
+
+	@RequestMapping("/admin/v_check_username.do")
+	public String checkUsername(String username, HttpServletRequest request,
+			HttpServletResponse response) {
+		if (StringUtils.isBlank(username) || userMng.usernameExist(username)) {
+			ResponseUtils.renderJson(response, "false");
+		} else {
+			ResponseUtils.renderJson(response, "true");
+		}
+		return null;
+	}
+
+	@RequestMapping("/admin/v_check_email.do")
+	public String checkEmail(String email, HttpServletRequest request,
+			HttpServletResponse response) {
+		if (StringUtils.isBlank(email) || userMng.emailExist(email)) {
+			ResponseUtils.renderJson(response, "false");
+		} else {
+			ResponseUtils.renderJson(response, "true");
+		}
+		return null;
+	}
+
+	private WebErrors validateSave(ShopAdmin bean,
+			HttpServletRequest request) {
+		WebErrors errors = WebErrors.create(request);
+		return errors;
+	}
+
+	private WebErrors validateEdit(Long id, HttpServletRequest request) {
+		WebErrors errors = WebErrors.create(request);
+		errors.ifNull(id, "id");
+		vldExist(id, errors);
+		return errors;
+	}
+
+	private WebErrors validateUpdate(Long id,
+			HttpServletRequest request) {
+		WebErrors errors = WebErrors.create(request);
+		if (vldExist(id, errors)) {
+			return errors;
+		}
+		return errors;
+	}
+
+	private WebErrors validateDelete(Long[] ids, HttpServletRequest request) {
+		WebErrors errors = WebErrors.create(request);
+		errors.ifEmpty(ids, "ids");
+		for (Long id : ids) {
+			vldExist(id, errors);
+		}
+		return errors;
+	}
+
+	private boolean vldExist(Long id, WebErrors errors) {
+		ShopAdmin entity = manager.findById(id);
+		return errors.ifNotExist(entity, ShopAdmin.class, id);
+	}
+
+    @Autowired
+	private ShopAdminMng manager;
+	@Autowired
+	private UserMng userMng;
+	@Autowired
+	protected RoleMng roleMng;
+	@Autowired
+	protected AdminMng adminMng;
+    @Autowired
+    private SessionProvider session;
+
+    @Resource
+    private CommerceService commerceService;
+
+    @Resource
+    private ChannelService channelService;
+
+    public SessionProvider getSession() {
+        return session;
+    }
+
+    public void setSession(SessionProvider session) {
+        this.session = session;
+    }
+}

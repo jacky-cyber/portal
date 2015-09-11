@@ -1,0 +1,128 @@
+package com.jspgou.cms.manager.impl;
+
+import com.jspgou.cms.dao.OrderDao;
+import com.jspgou.cms.dao.ReportDao;
+import com.jspgou.cms.entity.*;
+import com.jspgou.cms.manager.SettlementMng;
+import com.jspgou.common.page.Pagination;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Created by zhengjiang on 2015/3/9.
+ */
+public class SettlementMngImpl implements SettlementMng {
+
+    public Pagination getChannelReport(String name, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long commerceId) {
+        return dao.getChannelReport(name, startTime, endTime, pageNo, pageSize, channelId, commerceId);
+    }
+
+    public Pagination getCommerceReport(String name, String channelName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long commerceId) {
+        return dao.getCommerceReport(name, channelName, startTime, endTime, pageNo, pageSize, channelId, commerceId);
+    }
+
+    public List<Settlement> getChannelReport(String name, Date startTime, Date endTime, Long channelId, Long commerceId) {
+        return dao.getChannelReport(name, startTime, endTime, channelId, commerceId);
+    }
+
+    public List<Settlement> getCommerceReport(String name, String channelName, Date startTime, Date endTime, Long channelId, Long commerceId) {
+        return dao.getCommerceReport(name, channelName, startTime, endTime, channelId, commerceId);
+    }
+
+    public Pagination getProductReport(String productName, String commerceName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long commerceId) {
+        return dao.getProductReport(productName, commerceName, startTime, endTime, pageNo, pageSize, channelId, commerceId);
+    }
+    public List<ProductReport> getProductReport(String productName, String commerceName, Date startTime, Date endTime, Long channelId, Long commerceId) {
+        return dao.getProductReport(productName, commerceName, startTime, endTime, channelId, commerceId);
+    }
+
+    public Pagination getProductReporByRMB(String productName, String commerceName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId, Long commerceId) {
+        return dao.getProductReportByRMB(productName, commerceName, startTime, endTime, pageNo, pageSize, channelId, commerceId);
+    }
+    public List<ProductReportEntity> getProductReporByRMB(String productName, String commerceName, Date startTime, Date endTime, Long channelId, Long commerceId) {
+        return dao.getProductReportByRMB(productName, commerceName, startTime, endTime, channelId, commerceId);
+    }
+
+    public Pagination getVendorReport(String name, Date startTime, Date endTime, Long channelId, Long commerceId, int pageNo, int pageSize) {
+        return dao.getVendorReport(name, startTime, endTime, channelId, commerceId, pageNo, pageSize);
+    }
+    public List<VendorReport> getVendorReport(String name, Date startTime, Date endTime, Long channelId, Long commerceId) {
+        return dao.getVendorReport(name, startTime, endTime, channelId, commerceId);
+    }
+
+    public Pagination getVendorReportByRMB(String name, Date startTime, Date endTime, int pageNo, int pageSize) {
+        return dao.getVendorReportByRMB(name, startTime, endTime, pageNo, pageSize);
+    }
+    public List<VendorReportEntity> getVendorReportByRMB(String name, Date startTime, Date endTime) {
+        return dao.getVendorReportByRMB(name, startTime, endTime);
+    }
+
+    public Pagination getCommerceReportByPayMethodAmount(String name, Date startTime, Date endTime, int pageNo, int pageSize){
+        return dao.getCommerceReportByPayMethodAmount(name, startTime, endTime, pageNo, pageSize);
+    }
+    public List<ReportByAmountEntity> getCommerceReportByPayMethodAmount(String name, Date startTime, Date endTime){
+        return dao.getCommerceReportByPayMethodAmount(name, startTime, endTime);
+    }
+
+    public Pagination getCommerceReportByPayMethod(String name, Date startTime, Date endTime, int pageNo, int pageSize){
+        return dao.getCommerceReportByPayMethod(name, startTime, endTime, pageNo, pageSize);
+    }
+    public List<ReportEntity> getCommerceReportByPayMethod(String name, Date startTime, Date endTime){
+        return dao.getCommerceReportByPayMethod(name, startTime, endTime);
+    }
+
+    @Override
+    public Pagination getCommerceReportDetails(Long commerceId, String commerceName, String channelName, Date startTime, Date endTime, int pageNo, int pageSize, Long channelId) {
+        return dao.getCommerceReportDetails(commerceId, commerceName, channelName, startTime, endTime, pageNo, pageSize, channelId);
+    }
+
+    @Override
+    public List<ProductReportDetail> getCommerceReportDetails(String commerceName, String channelName, Date startTime, Date endTime, Long channelId, Long commerceId) {
+        return dao.getCommerceReportDetails(commerceName, channelName, startTime, endTime, channelId, commerceId);
+    }
+
+    @Override
+    public Pagination getAccountReport(String account, Date startTime, Date endTime, int pageNo, int pageSize) {
+        return dao.getAccountReport(account, startTime, endTime, pageNo, pageSize);
+    }
+
+    public Map<String, Object> fetchChannelReport(Map<String, Object> filters, String sortField, boolean isASC, int start, int size) {
+        return reportDao.fetchChannelReport(filters, sortField, isASC, start, size);
+    }
+
+    @Override
+    public Map<String, Object> fetchMerchantReport(Map<String, Object> filters, String sortField, boolean isASC, int start, int size) {
+        return reportDao.fetchMerchantReport(filters, sortField, isASC, start, size);
+    }
+
+    @Override
+    public Map<String, Object> fetchProductReport(Map<String, Object> filters, String sortField, boolean isASC, int start, int size) {
+        return reportDao.fetchProductReport(filters, sortField, isASC, start, size);
+    }
+
+    @Override
+    public Map<String, Object> fetchProductReportRMB(Map<String, Object> filters, String sortField, boolean isASC, int start, int size) {
+        return reportDao.fetchProductReportRMB(filters, sortField, isASC, start, size);
+    }
+
+    @Override
+    public Map<String, Object> fetchVendorReport(Map<String, Object> filters, String sortField, boolean isASC, int start, int size) {
+        return reportDao.fetchVendorReport(filters, sortField, isASC, start, size);
+    }
+
+    @Override
+    public Map<String, Object> fetchVendorReportRMB(Map<String, Object> filters, String sortField, boolean isASC, int start, int size) {
+        return reportDao.fetchVendorReportRMB(filters, sortField, isASC, start, size);
+    }
+
+
+    @Autowired
+    private OrderDao dao;
+
+    @Autowired
+    private ReportDao reportDao;
+}
